@@ -14,7 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      generations: {
+        Row: {
+          audio_style: string
+          audio_url: string | null
+          created_at: string
+          id: string
+          image_url: string
+          motion_style: string
+          recipient_name: string | null
+          runway_job_id: string | null
+          status: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          audio_style?: string
+          audio_url?: string | null
+          created_at?: string
+          id?: string
+          image_url: string
+          motion_style?: string
+          recipient_name?: string | null
+          runway_job_id?: string | null
+          status?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          audio_style?: string
+          audio_url?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          motion_style?: string
+          recipient_name?: string | null
+          runway_job_id?: string | null
+          status?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
