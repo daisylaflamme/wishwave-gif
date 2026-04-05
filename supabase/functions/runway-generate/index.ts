@@ -1,5 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "@supabase/supabase-js/cors";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 
 const MOTION_PROMPTS: Record<string, string> = {
   wave: "A natural, gentle birthday greeting motion. The person smiles softly and gives a small realistic hand wave toward the camera. Motion should be subtle, warm, stable, and believable. Keep the face consistent, preserve identity, avoid exaggerated body motion, avoid camera movement, avoid extra limbs or distorted hands.",
