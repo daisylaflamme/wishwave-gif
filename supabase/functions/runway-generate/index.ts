@@ -49,15 +49,22 @@ serve(async (req) => {
         promptImage: imageUrl,
         promptText: prompt,
         duration: 5,
-        ratio: "1280:720",
+        ratio: "1280:768",
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Runway API error:", response.status, errorText);
+      
+      // Check for credit-related errors
+      const isCreditsError = errorText.toLowerCase().includes("credit");
+      const userMessage = isCreditsError
+        ? "Video generation requires Runway credits. Please add credits or try again later."
+        : `Runway API error: ${response.status}`;
+      
       return new Response(
-        JSON.stringify({ error: `Runway API error: ${response.status}` }),
+        JSON.stringify({ error: userMessage }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

@@ -131,6 +131,9 @@ const Index = () => {
                 <Wand2 className="h-5 w-5" />
                 Create Greeting
               </Button>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Videos are optimized to 5 seconds for fast generation
+              </p>
             </div>
 
             {error && (
