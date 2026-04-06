@@ -49,7 +49,7 @@ serve(async (req) => {
         promptImage: imageUrl,
         promptText: prompt,
         duration: 5,
-        ratio: "1280:768",
+        ratio: "1280:720",
       }),
     });
 
