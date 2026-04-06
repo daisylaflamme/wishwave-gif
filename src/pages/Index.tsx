@@ -8,8 +8,8 @@ import { GenerationHistory } from "@/components/GenerationHistory";
 import { ConfettiBackground } from "@/components/ConfettiBackground";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MOTION_STYLES, AUDIO_STYLES } from "@/lib/constants";
-import type { MotionStyle, AudioStyle } from "@/lib/constants";
+import { MOTION_STYLES } from "@/lib/constants";
+import type { MotionStyle } from "@/lib/constants";
 import { useGeneration } from "@/hooks/useGeneration";
 import { Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -18,7 +18,6 @@ const Index = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [recipientName, setRecipientName] = useState("");
   const [motionStyle, setMotionStyle] = useState<MotionStyle>("wave");
-  const [audioStyle, setAudioStyle] = useState<AudioStyle>("cheerful");
   const { status, error, result, generate, reset, setResult } = useGeneration();
   const { toast } = useToast();
 
@@ -31,14 +30,13 @@ const Index = () => {
       });
       return;
     }
-    generate(selectedImage, recipientName, motionStyle, audioStyle);
+    generate(selectedImage, recipientName, motionStyle);
   };
 
   const handleCreateAnother = () => {
     setSelectedImage(null);
     setRecipientName("");
     setMotionStyle("wave");
-    setAudioStyle("cheerful");
     reset();
   };
 
@@ -110,13 +108,6 @@ const Index = () => {
                 options={MOTION_STYLES}
                 value={motionStyle}
                 onChange={(v) => setMotionStyle(v as MotionStyle)}
-              />
-
-              <StyleSelector
-                label="Audio Style"
-                options={AUDIO_STYLES}
-                value={audioStyle}
-                onChange={(v) => setAudioStyle(v as AudioStyle)}
               />
             </div>
 
