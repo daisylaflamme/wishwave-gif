@@ -1,10 +1,11 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { MotionStyle, AudioStyle } from "@/lib/constants";
+import type { MotionStyle } from "@/lib/constants";
+import { STATIC_AUDIO_PATH } from "@/lib/constants";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface GenerationState {
-  status: "idle" | "uploading" | "generating_video" | "generating_audio" | "ready";
+  status: "idle" | "uploading" | "generating_video" | "finalizing" | "ready";
   error: string | null;
   result: {
     videoUrl: string;
@@ -22,7 +23,7 @@ export function useGeneration() {
   const queryClient = useQueryClient();
 
   const generate = useCallback(
-    async (file: File, recipientName: string, motionStyle: MotionStyle, audioStyle: AudioStyle) => {
+    async (file: File, recipientName: string, motionStyle: MotionStyle) => {
       setState({ status: "uploading", error: null, result: null });
 
       try {
@@ -47,7 +48,7 @@ export function useGeneration() {
             image_url: imageUrl,
             recipient_name: recipientName || null,
             motion_style: motionStyle,
-            audio_style: audioStyle,
+            audio_style: "static",
             status: "generating_video",
           })
           .select()
@@ -87,18 +88,12 @@ export function useGeneration() {
 
         if (!videoUrl) throw new Error("Video generation timed out");
 
-        // 5. Generate audio
-        setState((s) => ({ ...s, status: "generating_audio" }));
+        // 5. Finalize — use static audio
+        setState((s) => ({ ...s, status: "finalizing" }));
 
-        const audioResponse = await supabase.functions.invoke("elevenlabs-audio", {
-          body: { audioStyle, generationId: generation.id },
-        });
+        const audioUrl = STATIC_AUDIO_PATH;
 
-        if (audioResponse.error) throw new Error(`Audio generation failed: ${audioResponse.error.message}`);
-
-        const { audioUrl } = audioResponse.data;
-
-        // 6. Update record to ready
+        // Update record to ready
         await supabase
           .from("generations")
           .update({
