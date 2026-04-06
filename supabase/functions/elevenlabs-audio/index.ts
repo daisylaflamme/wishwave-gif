@@ -30,17 +30,16 @@ serve(async (req) => {
 
     const prompt = AUDIO_PROMPTS[audioStyle || "cheerful"] || AUDIO_PROMPTS.cheerful;
 
-    // Generate audio using ElevenLabs Sound Effects API
-    const response = await fetch("https://api.elevenlabs.io/v1/sound-generation", {
+    // Generate audio using ElevenLabs Music API
+    const response = await fetch("https://api.elevenlabs.io/v1/music", {
       method: "POST",
       headers: {
         "xi-api-key": ELEVENLABS_API_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        text: prompt,
+        prompt: prompt,
         duration_seconds: 5,
-        prompt_influence: 0.3,
       }),
     });
 
