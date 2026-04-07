@@ -10,7 +10,7 @@ interface GenerationState {
   result: {
     videoUrl: string;
     audioUrl: string;
-    recipientName: string | null;
+    recipientMessage: string | null;
   } | null;
 }
 
@@ -23,21 +23,17 @@ export function useGeneration() {
   const queryClient = useQueryClient();
 
   const generate = useCallback(
-    async (file: File, recipientName: string, motionStyle: MotionStyle) => {
+    async (file: File, recipientMessage: string, motionStyle: MotionStyle) => {
       setState({ status: "uploading", error: null, result: null });
 
       try {
         // 1. Upload image to storage
         const fileName = `${Date.now()}-${file.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from("wishwave-uploads")
-          .upload(fileName, file);
+        const { error: uploadError } = await supabase.storage.from("wishwave-uploads").upload(fileName, file);
 
         if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
 
-        const { data: urlData } = supabase.storage
-          .from("wishwave-uploads")
-          .getPublicUrl(fileName);
+        const { data: urlData } = supabase.storage.from("wishwave-uploads").getPublicUrl(fileName);
 
         const imageUrl = urlData.publicUrl;
 
@@ -46,7 +42,7 @@ export function useGeneration() {
           .from("generations")
           .insert({
             image_url: imageUrl,
-            recipient_name: recipientName || null,
+            recipient_name: recipientMessage || null,
             motion_style: motionStyle,
             audio_style: "static",
             status: "generating_video",
@@ -111,7 +107,7 @@ export function useGeneration() {
           result: {
             videoUrl,
             audioUrl,
-            recipientName: recipientName || null,
+            recipientMessage: recipientMessage || null,
           },
         });
       } catch (err) {
@@ -119,19 +115,16 @@ export function useGeneration() {
         setState((s) => ({ ...s, status: "idle", error: message }));
       }
     },
-    [queryClient]
+    [queryClient],
   );
 
   const reset = useCallback(() => {
     setState({ status: "idle", error: null, result: null });
   }, []);
 
-  const setResult = useCallback(
-    (result: { videoUrl: string; audioUrl: string; recipientName: string | null }) => {
-      setState({ status: "ready", error: null, result });
-    },
-    []
-  );
+  const setResult = useCallback((result: { videoUrl: string; audioUrl: string; recipientMessage: string | null }) => {
+    setState({ status: "ready", error: null, result });
+  }, []);
 
   return { ...state, generate, reset, setResult };
 }
