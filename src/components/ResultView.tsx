@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { Download, RotateCcw, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { mergeVideoAudio } from "@/lib/mergeVideoAudio";
 
 interface ResultViewProps {
   videoUrl: string;
@@ -13,6 +14,8 @@ export function ResultView({ videoUrl, audioUrl, recipientName, onCreateAnother 
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadStatus, setDownloadStatus] = useState("");
 
   const greetingText = recipientName
     ? `Happy Birthday, ${recipientName}!`
@@ -45,17 +48,36 @@ export function ResultView({ videoUrl, audioUrl, recipientName, onCreateAnother 
   }, []);
 
   const handleDownload = async () => {
+    setDownloading(true);
+    const filename = `wishwave-${recipientName || "greeting"}.mp4`;
     try {
-      const response = await fetch(videoUrl);
-      const blob = await response.blob();
+      setDownloadStatus("Loading merge engine...");
+      const blob = await mergeVideoAudio(videoUrl, audioUrl, filename);
+      setDownloadStatus("Saving...");
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `wishwave-${recipientName || "greeting"}.mp4`;
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Download failed:", err);
+      console.error("Merge failed, downloading video only:", err);
+      setDownloadStatus("Downloading video without audio...");
+      try {
+        const response = await fetch(videoUrl);
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        console.error("Fallback download failed:", e);
+      }
+    } finally {
+      setDownloading(false);
+      setDownloadStatus("");
     }
   };
 
@@ -104,9 +126,9 @@ export function ResultView({ videoUrl, audioUrl, recipientName, onCreateAnother 
 
       {/* Actions */}
       <div className="flex gap-3 justify-center">
-        <Button onClick={handleDownload} className="gap-2">
+        <Button onClick={handleDownload} disabled={downloading} className="gap-2">
           <Download className="h-4 w-4" />
-          Download MP4
+          {downloading ? (downloadStatus || "Preparing...") : "Download MP4"}
         </Button>
         <Button variant="outline" onClick={onCreateAnother} className="gap-2">
           <RotateCcw className="h-4 w-4" />
