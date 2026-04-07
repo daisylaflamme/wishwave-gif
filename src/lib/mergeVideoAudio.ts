@@ -48,9 +48,8 @@ export async function mergeVideoAudio(
     "output.mp4",
   ]);
 
-  const data = await ff.readFile("output.mp4");
-  const uint8 = data as Uint8Array;
-  const blob = new Blob([uint8.buffer], { type: "video/mp4" });
+  const data = await ff.readFile("output.mp4") as Uint8Array;
+  const blob = new Blob([new Uint8Array(data)], { type: "video/mp4" });
 
   // Cleanup
   await ff.deleteFile("input.mp4");
