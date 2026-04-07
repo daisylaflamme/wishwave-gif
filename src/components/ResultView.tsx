@@ -15,6 +15,7 @@ export function ResultView({ videoUrl, audioUrl, recipientName, onCreateAnother 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [downloadStatus, setDownloadStatus] = useState("");
 
   const greetingText = recipientName
     ? `Happy Birthday, ${recipientName}!`
@@ -48,21 +49,36 @@ export function ResultView({ videoUrl, audioUrl, recipientName, onCreateAnother 
 
   const handleDownload = async () => {
     setDownloading(true);
+    setDownloadStatus("Loading merge engine...");
     try {
-      // Simple download of just the video for now
-      // Full ffmpeg.wasm merge can be added later
-      const response = await fetch(videoUrl);
-      const blob = await response.blob();
+      setDownloadStatus("Merging video + audio...");
+      const blob = await mergeVideoAudio(videoUrl, audioUrl, `wishwave-${recipientName || "greeting"}.mp4`);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `wishwave-${recipientName || "greeting"}.mp4`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch {
-      console.error("Download failed");
+      setDownloadStatus("");
+    } catch (err) {
+      console.error("Download/merge failed:", err);
+      setDownloadStatus("Merge failed, downloading video only...");
+      // Fallback: download raw video
+      try {
+        const response = await fetch(videoUrl);
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `wishwave-${recipientName || "greeting"}.mp4`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch {
+        console.error("Fallback download also failed");
+      }
     } finally {
       setDownloading(false);
+      setDownloadStatus("");
     }
   };
 
