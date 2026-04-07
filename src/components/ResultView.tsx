@@ -126,9 +126,9 @@ export function ResultView({ videoUrl, audioUrl, recipientName, onCreateAnother 
 
       {/* Actions */}
       <div className="flex gap-3 justify-center">
-        <Button onClick={handleDownload} className="gap-2">
+        <Button onClick={handleDownload} disabled={downloading} className="gap-2">
           <Download className="h-4 w-4" />
-          Download MP4
+          {downloading ? (downloadStatus || "Preparing...") : "Download MP4"}
         </Button>
         <Button variant="outline" onClick={onCreateAnother} className="gap-2">
           <RotateCcw className="h-4 w-4" />
