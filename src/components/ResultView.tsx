@@ -6,20 +6,18 @@ import { mergeVideoAudio } from "@/lib/mergeVideoAudio";
 interface ResultViewProps {
   videoUrl: string;
   audioUrl: string;
-  recipientName?: string | null;
+  recipientMessage?: string | null;
   onCreateAnother: () => void;
 }
 
-export function ResultView({ videoUrl, audioUrl, recipientName, onCreateAnother }: ResultViewProps) {
+export function ResultView({ videoUrl, audioUrl, recipientMessage, onCreateAnother }: ResultViewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState("");
 
-  const greetingText = recipientName
-    ? `Happy Birthday, ${recipientName}!`
-    : "Happy Birthday!";
+  const greetingText = recipientMessage ? `${recipientMessage}` : "";
 
   const togglePlay = () => {
     if (!videoRef.current || !audioRef.current) return;
@@ -49,7 +47,7 @@ export function ResultView({ videoUrl, audioUrl, recipientName, onCreateAnother 
 
   const handleDownload = async () => {
     setDownloading(true);
-    const filename = `wishwave-${recipientName || "greeting"}.mp4`;
+    const filename = `wishwave-${recipientMessage || "greeting"}.mp4`;
     try {
       setDownloadStatus("Loading merge engine...");
       const blob = await mergeVideoAudio(videoUrl, audioUrl, filename);
@@ -85,13 +83,7 @@ export function ResultView({ videoUrl, audioUrl, recipientName, onCreateAnother 
     <div className="max-w-lg mx-auto space-y-6">
       {/* Video with text overlay */}
       <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-primary/10">
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          className="w-full"
-          playsInline
-          muted
-        />
+        <video ref={videoRef} src={videoUrl} className="w-full" playsInline muted />
         <audio ref={audioRef} src={audioUrl} preload="auto" />
 
         {/* Greeting text overlay */}
@@ -128,7 +120,7 @@ export function ResultView({ videoUrl, audioUrl, recipientName, onCreateAnother 
       <div className="flex gap-3 justify-center">
         <Button onClick={handleDownload} disabled={downloading} className="gap-2">
           <Download className="h-4 w-4" />
-          {downloading ? (downloadStatus || "Preparing...") : "Download MP4"}
+          {downloading ? downloadStatus || "Preparing..." : "Download MP4"}
         </Button>
         <Button variant="outline" onClick={onCreateAnother} className="gap-2">
           <RotateCcw className="h-4 w-4" />
