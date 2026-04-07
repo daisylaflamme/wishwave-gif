@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [recipientName, setRecipientName] = useState("");
+  const [recipientName, setRecipientMessage] = useState("");
   const [motionStyle, setMotionStyle] = useState<MotionStyle>("wave");
   const { status, error, result, generate, reset, setResult } = useGeneration();
   const { toast } = useToast();
@@ -35,7 +35,7 @@ const Index = () => {
 
   const handleCreateAnother = () => {
     setSelectedImage(null);
-    setRecipientName("");
+    setRecipientMessage("");
     setMotionStyle("wave");
     reset();
   };
@@ -93,12 +93,12 @@ const Index = () => {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">
-                  Recipient Name <span className="text-muted-foreground">(optional)</span>
+                  Short Message <span className="text-muted-foreground">(optional)</span>
                 </label>
                 <Input
-                  placeholder="e.g. Sarah"
+                  placeholder="e.g. Happy Birthday!"
                   value={recipientName}
-                  onChange={(e) => setRecipientName(e.target.value)}
+                  onChange={(e) => setRecipientMessage(e.target.value)}
                   className="max-w-xs"
                 />
               </div>
@@ -134,15 +134,11 @@ const Index = () => {
             )}
           </div>
 
-          <GenerationHistory
-            onSelect={(gen) => setResult(gen)}
-          />
+          <GenerationHistory onSelect={(gen) => setResult(gen)} />
         </main>
       </div>
 
-      {status !== "idle" && status !== "ready" && (
-        <ProgressOverlay currentStatus={status} error={error} />
-      )}
+      {status !== "idle" && status !== "ready" && <ProgressOverlay currentStatus={status} error={error} />}
     </div>
   );
 };
