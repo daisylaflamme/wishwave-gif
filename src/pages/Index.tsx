@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [recipientName, setRecipientMessage] = useState("");
+  const [recipientMessage, setRecipientMessage] = useState("");
   const [motionStyle, setMotionStyle] = useState<MotionStyle>("wave");
   const { status, error, result, generate, reset, setResult } = useGeneration();
   const { toast } = useToast();
@@ -30,7 +30,7 @@ const Index = () => {
       });
       return;
     }
-    generate(selectedImage, recipientName, motionStyle);
+    generate(selectedImage, recipientMessage, motionStyle);
   };
 
   const handleCreateAnother = () => {
@@ -50,7 +50,7 @@ const Index = () => {
             <ResultView
               videoUrl={result.videoUrl}
               audioUrl={result.audioUrl}
-              recipientName={result.recipientName}
+              recipientMessage={result.recipientMessage}
               onCreateAnother={handleCreateAnother}
             />
           </main>
@@ -97,7 +97,7 @@ const Index = () => {
                 </label>
                 <Input
                   placeholder="e.g. Happy Birthday!"
-                  value={recipientName}
+                  value={recipientMessage}
                   onChange={(e) => setRecipientMessage(e.target.value)}
                   className="max-w-xs"
                 />
