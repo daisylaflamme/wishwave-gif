@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { Download, RotateCcw, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { mergeVideoAudio } from "@/lib/mergeVideoAudio";
 
 interface ResultViewProps {
   videoUrl: string;
