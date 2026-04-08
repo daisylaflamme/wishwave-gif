@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { Download, RotateCcw, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { mergeVideoAudio } from "@/lib/mergeVideoAudio";
+import { useToast } from "@/hooks/use-toast";
 
 interface ResultViewProps {
   videoUrl: string;
@@ -16,6 +17,7 @@ export function ResultView({ videoUrl, audioUrl, recipientMessage, onCreateAnoth
   const [isPlaying, setIsPlaying] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState("");
+  const { toast } = useToast();
 
   const greetingText = recipientMessage ? `${recipientMessage}` : "";
 
@@ -47,32 +49,31 @@ export function ResultView({ videoUrl, audioUrl, recipientMessage, onCreateAnoth
 
   const handleDownload = async () => {
     setDownloading(true);
-    const filename = `wishwave-${recipientMessage || "greeting"}.mp4`;
+    const fileLabel = (recipientMessage || "greeting")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "greeting";
+    const filename = `wishwave-${fileLabel}.mp4`;
+
     try {
-      setDownloadStatus("Loading merge engine...");
-      const blob = await mergeVideoAudio(videoUrl, audioUrl, filename);
+      setDownloadStatus("Preparing final video...");
+      const blob = await mergeVideoAudio(videoUrl, audioUrl, filename, recipientMessage);
       setDownloadStatus("Saving...");
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = filename;
       a.click();
+      a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Merge failed, downloading video only:", err);
-      setDownloadStatus("Downloading video without audio...");
-      try {
-        const response = await fetch(videoUrl);
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
-      } catch (e) {
-        console.error("Fallback download failed:", e);
-      }
+      console.error("Final video composition failed:", err);
+      toast({
+        variant: "destructive",
+        title: "Download failed",
+        description: "Couldn't create the final video with sound and message. Please try again.",
+      });
     } finally {
       setDownloading(false);
       setDownloadStatus("");
