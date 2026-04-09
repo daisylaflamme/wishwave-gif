@@ -5,6 +5,25 @@ let ffmpeg: FFmpeg | null = null;
 
 const CLIP_DURATION_SECONDS = 5;
 
+async function fetchVideoForMerge(videoUrl: string): Promise<Uint8Array> {
+  const proxyResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/video-proxy`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    },
+    body: JSON.stringify({ url: videoUrl }),
+  });
+
+  if (!proxyResponse.ok) {
+    const errorText = await proxyResponse.text();
+    throw new Error(`Failed to fetch source video for export: ${proxyResponse.status} ${errorText}`);
+  }
+
+  return new Uint8Array(await proxyResponse.arrayBuffer());
+}
+
 async function createOverlayImage(message: string) {
   const canvas = document.createElement("canvas");
   canvas.width = 1280;
@@ -97,7 +116,7 @@ export async function mergeVideoAudio(
   const filesToCleanup = ["input.mp4", "input.mp3", "output.mp4", "probe.txt"];
 
   try {
-    const [videoData, audioData] = await Promise.all([fetchFile(videoUrl), fetchFile(audioUrl)]);
+    const [videoData, audioData] = await Promise.all([fetchVideoForMerge(videoUrl), fetchFile(audioUrl)]);
 
     await ff.writeFile("input.mp4", videoData);
     await ff.writeFile("input.mp3", audioData);
