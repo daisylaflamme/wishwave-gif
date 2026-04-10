@@ -163,7 +163,8 @@ export async function mergeVideoAudio(
     }
 
     command.push(
-      "-c:a", "copy",
+      "-c:a", "aac",
+      "-b:a", "192k",
       "-t", String(CLIP_DURATION_SECONDS),
       "-af", `afade=t=out:st=${CLIP_DURATION_SECONDS - 0.5}:d=0.5`,
       "-shortest",
