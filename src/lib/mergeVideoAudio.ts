@@ -1,5 +1,6 @@
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { toBlobURL, fetchFile } from "@ffmpeg/util";
+import { STATIC_AUDIO_PATH } from "@/lib/constants";
 
 let ffmpeg: FFmpeg | null = null;
 let ffmpegLoadPromise: Promise<FFmpeg> | null = null;
@@ -122,22 +123,22 @@ async function getFFmpeg(): Promise<FFmpeg> {
 
 export async function mergeVideoAudio(
   videoUrl: string,
-  audioUrl: string,
+  _audioUrl: string,
   _outputName: string,
   overlayText?: string | null,
 ): Promise<Blob> {
   const ff = await getFFmpeg();
   const normalizedText = overlayText?.trim() ?? "";
   const hasOverlay = normalizedText.length > 0;
-  const filesToCleanup = ["input.mp4", "input.mp3", "output.mp4", "probe.txt"];
+  const filesToCleanup = ["input.mp4", "input.m4a", "output.mp4", "probe.txt"];
 
   try {
-    const [videoData, audioData] = await Promise.all([fetchVideoForMerge(videoUrl), fetchFile(audioUrl)]);
+    const [videoData, audioData] = await Promise.all([fetchVideoForMerge(videoUrl), fetchFile(STATIC_AUDIO_PATH)]);
 
     await ff.writeFile("input.mp4", videoData);
-    await ff.writeFile("input.mp3", audioData);
+    await ff.writeFile("input.m4a", audioData);
 
-    const command = ["-i", "input.mp4", "-i", "input.mp3"];
+    const command = ["-i", "input.mp4", "-i", "input.m4a"];
 
     if (hasOverlay) {
       const overlayData = await createOverlayImage(normalizedText);

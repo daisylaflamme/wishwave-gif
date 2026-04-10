@@ -27,7 +27,7 @@ export const MOTION_PROMPTS: Record<MotionStyle, string> = {
   nod: "The person gives a gentle friendly nod with a soft smile. Motion should be subtle, realistic, and stable. Preserve identity and avoid distortion.",
 };
 
-export const STATIC_AUDIO_PATH = "/assets/audio/happy-birthday.mp3";
+export const STATIC_AUDIO_PATH = "/assets/audio/happy-birthday.m4a";
 
 export const STATUS_STEPS = [
   { key: 'uploading', label: 'Uploading image' },
