@@ -2,6 +2,7 @@ import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { toBlobURL, fetchFile } from "@ffmpeg/util";
 
 let ffmpeg: FFmpeg | null = null;
+let ffmpegLoadPromise: Promise<FFmpeg> | null = null;
 
 const CLIP_DURATION_SECONDS = 5;
 
@@ -91,17 +92,32 @@ async function cleanupFiles(ff: FFmpeg, files: string[]) {
 
 async function getFFmpeg(): Promise<FFmpeg> {
   if (ffmpeg && ffmpeg.loaded) return ffmpeg;
+  if (ffmpegLoadPromise) return ffmpegLoadPromise;
 
-  ffmpeg = new FFmpeg();
+  ffmpegLoadPromise = (async () => {
+    const instance = new FFmpeg();
+    const assetBaseUrl = new URL("/assets/ffmpeg/", window.location.origin).href;
 
-  // Use UMD (single-threaded) build — no SharedArrayBuffer needed
-  const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
-  await ffmpeg.load({
-    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-  });
+    console.info("Loading local FFmpeg core from:", assetBaseUrl);
 
-  return ffmpeg;
+    try {
+      await instance.load({
+        coreURL: await toBlobURL(`${assetBaseUrl}ffmpeg-core.js`, "text/javascript"),
+        wasmURL: await toBlobURL(`${assetBaseUrl}ffmpeg-core.wasm`, "application/wasm"),
+      });
+
+      ffmpeg = instance;
+      return instance;
+    } catch (error) {
+      ffmpeg = null;
+      console.error("Failed to load local FFmpeg core", error);
+      throw error;
+    } finally {
+      ffmpegLoadPromise = null;
+    }
+  })();
+
+  return ffmpegLoadPromise;
 }
 
 export async function mergeVideoAudio(
