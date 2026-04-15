@@ -1,127 +1,93 @@
-import { useRef, useEffect, useState } from "react";
-import { Download, RotateCcw, Play, Pause } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Download, RotateCcw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { mergeVideoAudio } from "@/lib/mergeVideoAudio";
-import { useToast } from "@/hooks/use-toast";
+import { createGif } from "@/lib/createGif";
 
 interface ResultViewProps {
   videoUrl: string;
-  audioUrl: string;
   recipientMessage?: string | null;
   onCreateAnother: () => void;
 }
 
-export function ResultView({ videoUrl, audioUrl, recipientMessage, onCreateAnother }: ResultViewProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [downloading, setDownloading] = useState(false);
-  const [downloadStatus, setDownloadStatus] = useState("");
-  const { toast } = useToast();
-
-  const greetingText = recipientMessage ? `${recipientMessage}` : "";
-
-  const togglePlay = () => {
-    if (!videoRef.current || !audioRef.current) return;
-
-    if (isPlaying) {
-      videoRef.current.pause();
-      audioRef.current.pause();
-    } else {
-      videoRef.current.currentTime = 0;
-      audioRef.current.currentTime = 0;
-      videoRef.current.play();
-      audioRef.current.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
+export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: ResultViewProps) {
+  const [gifBlob, setGifBlob] = useState<Blob | null>(null);
+  const [gifUrl, setGifUrl] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    const handleEnded = () => {
-      audioRef.current?.pause();
-      setIsPlaying(false);
-    };
-    video.addEventListener("ended", handleEnded);
-    return () => video.removeEventListener("ended", handleEnded);
-  }, []);
+    let cancelled = false;
 
-  const handleDownload = async () => {
-    setDownloading(true);
+    async function generate() {
+      try {
+        setProgress(0);
+        setError(null);
+        const blob = await createGif(videoUrl, recipientMessage, (pct) => {
+          if (!cancelled) setProgress(pct);
+        });
+        if (cancelled) return;
+        setGifBlob(blob);
+        setGifUrl(URL.createObjectURL(blob));
+      } catch (err) {
+        if (!cancelled) {
+          console.error("GIF creation failed:", err);
+          setError("Failed to create your greeting GIF. Please try again.");
+        }
+      }
+    }
+
+    generate();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [videoUrl, recipientMessage]);
+
+  useEffect(() => {
+    return () => {
+      if (gifUrl) URL.revokeObjectURL(gifUrl);
+    };
+  }, [gifUrl]);
+
+  const handleDownload = () => {
+    if (!gifBlob) return;
     const fileLabel = (recipientMessage || "greeting")
       .trim()
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "") || "greeting";
-    const filename = `wishwave-${fileLabel}.mp4`;
+    const filename = `wishwave-${fileLabel}.gif`;
 
-    try {
-      setDownloadStatus("Preparing final video...");
-      const blob = await mergeVideoAudio(videoUrl, audioUrl, filename, recipientMessage);
-      setDownloadStatus("Saving...");
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Final video composition failed:", err);
-      toast({
-        variant: "destructive",
-        title: "Download failed",
-        description: "Couldn't create the final video with sound and message. Please try again.",
-      });
-    } finally {
-      setDownloading(false);
-      setDownloadStatus("");
-    }
+    const url = URL.createObjectURL(gifBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
-      {/* Video with text overlay */}
-      <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-primary/10">
-        <video ref={videoRef} src={videoUrl} className="w-full" playsInline muted />
-        <audio ref={audioRef} src={audioUrl} preload="auto" />
-
-        {/* Greeting text overlay */}
-        <div className="absolute inset-x-0 bottom-0 p-6 pb-8 bg-gradient-to-t from-black/60 via-black/20 to-transparent">
-          <p
-            className="text-center font-bold drop-shadow-lg"
-            style={{
-              fontSize: "clamp(1.25rem, 4vw, 2rem)",
-              color: "white",
-              textShadow: "0 2px 8px rgba(0,0,0,0.5), 0 0 20px rgba(0,0,0,0.3)",
-              letterSpacing: "0.02em",
-            }}
-          >
-            {greetingText}
-          </p>
-        </div>
-
-        {/* Play button overlay */}
-        <button
-          onClick={togglePlay}
-          className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors group"
-        >
-          <div className="h-16 w-16 rounded-full bg-primary/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-            {isPlaying ? (
-              <Pause className="h-7 w-7" style={{ color: "white" }} />
-            ) : (
-              <Play className="h-7 w-7 ml-1" style={{ color: "white" }} />
-            )}
+      <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-primary/10 bg-muted min-h-[200px] flex items-center justify-center">
+        {gifUrl ? (
+          <img src={gifUrl} alt="Your greeting" className="w-full" />
+        ) : error ? (
+          <div className="p-6 text-center text-destructive text-sm">{error}</div>
+        ) : (
+          <div className="p-8 text-center space-y-3">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+            <p className="text-sm text-muted-foreground">
+              Creating your greeting... {progress}%
+            </p>
           </div>
-        </button>
+        )}
       </div>
 
-      {/* Actions */}
       <div className="flex gap-3 justify-center">
-        <Button onClick={handleDownload} disabled={downloading} className="gap-2">
+        <Button onClick={handleDownload} disabled={!gifBlob} className="gap-2">
           <Download className="h-4 w-4" />
-          {downloading ? downloadStatus || "Preparing..." : "Download MP4"}
+          {gifBlob ? "Download GIF" : "Preparing..."}
         </Button>
         <Button variant="outline" onClick={onCreateAnother} className="gap-2">
           <RotateCcw className="h-4 w-4" />
