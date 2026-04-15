@@ -34,10 +34,8 @@ export function GenerationHistory({ onSelect }: GenerationHistoryProps) {
             className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group"
             onClick={() =>
               gen.video_url &&
-              gen.audio_url &&
               onSelect({
                 videoUrl: gen.video_url,
-                audioUrl: gen.audio_url,
                 recipientMessage: gen.recipient_name,
               })
             }
