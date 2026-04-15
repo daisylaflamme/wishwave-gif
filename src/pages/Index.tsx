@@ -49,7 +49,6 @@ const Index = () => {
           <main className="container max-w-4xl mx-auto px-4 pb-16">
             <ResultView
               videoUrl={result.videoUrl}
-              audioUrl={result.audioUrl}
               recipientMessage={result.recipientMessage}
               onCreateAnother={handleCreateAnother}
             />

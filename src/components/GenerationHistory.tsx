@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
 
 interface GenerationHistoryProps {
-  onSelect: (generation: { videoUrl: string; audioUrl: string; recipientMessage: string | null }) => void;
+  onSelect: (generation: { videoUrl: string; recipientMessage: string | null }) => void;
 }
 
 export function GenerationHistory({ onSelect }: GenerationHistoryProps) {
@@ -34,10 +34,8 @@ export function GenerationHistory({ onSelect }: GenerationHistoryProps) {
             className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group"
             onClick={() =>
               gen.video_url &&
-              gen.audio_url &&
               onSelect({
                 videoUrl: gen.video_url,
-                audioUrl: gen.audio_url,
                 recipientMessage: gen.recipient_name,
               })
             }

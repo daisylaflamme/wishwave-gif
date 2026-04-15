@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { MotionStyle } from "@/lib/constants";
-import { STATIC_AUDIO_PATH } from "@/lib/constants";
+
 import { useQueryClient } from "@tanstack/react-query";
 
 interface GenerationState {
@@ -9,7 +9,6 @@ interface GenerationState {
   error: string | null;
   result: {
     videoUrl: string;
-    audioUrl: string;
     recipientMessage: string | null;
   } | null;
 }
@@ -87,15 +86,12 @@ export function useGeneration() {
         // 5. Finalize — use static audio
         setState((s) => ({ ...s, status: "finalizing" }));
 
-        const audioUrl = STATIC_AUDIO_PATH;
-
         // Update record to ready
         await supabase
           .from("generations")
           .update({
             status: "ready",
             video_url: videoUrl,
-            audio_url: audioUrl,
           })
           .eq("id", generation.id);
 
@@ -106,7 +102,6 @@ export function useGeneration() {
           error: null,
           result: {
             videoUrl,
-            audioUrl,
             recipientMessage: recipientMessage || null,
           },
         });
@@ -122,7 +117,7 @@ export function useGeneration() {
     setState({ status: "idle", error: null, result: null });
   }, []);
 
-  const setResult = useCallback((result: { videoUrl: string; audioUrl: string; recipientMessage: string | null }) => {
+  const setResult = useCallback((result: { videoUrl: string; recipientMessage: string | null }) => {
     setState({ status: "ready", error: null, result });
   }, []);
 
