@@ -1,6 +1,5 @@
 import { encode } from "modern-gif";
 
-const GIF_WIDTH = 480;
 const GIF_FPS = 10;
 const GIF_DURATION_SECONDS = 5;
 const FRAME_DELAY = Math.round(1000 / GIF_FPS);
