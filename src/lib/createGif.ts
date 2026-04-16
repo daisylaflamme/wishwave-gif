@@ -1,6 +1,5 @@
 import { encode } from "modern-gif";
 
-const GIF_WIDTH = 480;
 const GIF_FPS = 10;
 const GIF_DURATION_SECONDS = 5;
 const FRAME_DELAY = Math.round(1000 / GIF_FPS);
@@ -93,11 +92,11 @@ export async function createGif(
       video.onerror = () => reject(new Error("Failed to load video"));
     });
 
-    const scale = GIF_WIDTH / video.videoWidth;
-    const gifHeight = Math.round(video.videoHeight * scale);
+    const gifWidth = video.videoWidth;
+    const gifHeight = video.videoHeight;
 
     const canvas = document.createElement("canvas");
-    canvas.width = GIF_WIDTH;
+    canvas.width = gifWidth;
     canvas.height = gifHeight;
     const ctx = canvas.getContext("2d")!;
 
@@ -113,14 +112,14 @@ export async function createGif(
         video.onseeked = () => resolve();
       });
 
-      ctx.drawImage(video, 0, 0, GIF_WIDTH, gifHeight);
+      ctx.drawImage(video, 0, 0, gifWidth, gifHeight);
 
       if (hasOverlay) {
-        drawOverlayText(ctx, normalizedText, GIF_WIDTH, gifHeight);
+        drawOverlayText(ctx, normalizedText, gifWidth, gifHeight);
       }
 
       frames.push({
-        data: ctx.getImageData(0, 0, GIF_WIDTH, gifHeight),
+        data: ctx.getImageData(0, 0, gifWidth, gifHeight),
         delay: FRAME_DELAY,
       });
 
@@ -130,7 +129,7 @@ export async function createGif(
     onProgress?.(92);
 
     const output = await encode({
-      width: GIF_WIDTH,
+      width: gifWidth,
       height: gifHeight,
       frames: frames.map((f) => ({
         data: f.data.data,

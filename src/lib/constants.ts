@@ -22,9 +22,9 @@ export const MOTION_STYLES = [
 export type MotionStyle = typeof MOTION_STYLES[number]['id'];
 
 export const MOTION_PROMPTS: Record<MotionStyle, string> = {
-  wave: "A natural, gentle birthday greeting motion. The person smiles softly and gives a small realistic hand wave toward the camera. Motion should be subtle, warm, stable, and believable. Keep the face consistent, preserve identity, avoid exaggerated body motion, avoid camera movement, avoid extra limbs or distorted hands.",
-  smile: "The person makes a subtle natural smile and slight friendly head movement. Motion should be minimal, warm, realistic, and stable. Preserve identity and avoid distortion.",
-  nod: "The person gives a gentle friendly nod with a soft smile. Motion should be subtle, realistic, and stable. Preserve identity and avoid distortion.",
+  wave: `Animate ONLY the person(s) present in the uploaded image. If the image is a headshot or portrait: show a natural hand wave in front of the body (visible in frame if possible), keep motion subtle, friendly, and realistic, add a soft natural smile. If multiple people are present: each person independently performs a small natural wave, do NOT merge people or synchronize unnaturally. STRICT RULES: DO NOT add new people, faces, or background elements. DO NOT change framing, zoom, or camera angle. DO NOT extend the image beyond original boundaries. Preserve original composition, proportions, and identity exactly. No extra limbs, no distortion. Motion must stay within the original image frame and look stable and believable.`,
+  smile: `Animate ONLY the person(s) present in the uploaded image. If headshot: apply a subtle natural smile with minimal facial movement. If multiple people: each person smiles independently and naturally. STRICT RULES: DO NOT add new people or modify background. DO NOT change framing or camera. Preserve identity, proportions, and exact layout. No morphing or blending of faces. Motion must be minimal, stable, and realistic within the original frame.`,
+  nod: `Animate ONLY the person(s) present in the uploaded image. If headshot: apply a gentle, friendly nod with a slight smile. If multiple people: each person nods independently. STRICT RULES: DO NOT generate new people or elements. DO NOT move or crop the camera. Preserve exact identity and composition. Avoid distortion or exaggerated movement. Motion must remain subtle and contained within the original image.`,
 };
 
 export const STATIC_AUDIO_PATH = "/assets/audio/happy-birthday.m4a";
