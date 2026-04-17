@@ -29,8 +29,20 @@ serve(async (req) => {
 
     const { imageUrl, motionStyle } = await req.json();
 
-    if (!imageUrl) {
+    if (!imageUrl || typeof imageUrl !== "string") {
       return new Response(JSON.stringify({ error: "imageUrl is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate imageUrl originates from our own Supabase storage (wishwave-uploads bucket).
+    // This prevents abuse where attackers feed arbitrary external URLs to Runway.
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+    const expectedPrefix = `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/public/wishwave-uploads/`;
+    if (!SUPABASE_URL || !imageUrl.startsWith(expectedPrefix)) {
+      console.error("runway-generate: rejected imageUrl from disallowed origin:", imageUrl);
+      return new Response(JSON.stringify({ error: "imageUrl must be an uploaded photo from this app" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -61,9 +73,10 @@ serve(async (req) => {
       const lowered = errorText.toLowerCase();
       const userMessage = lowered.includes("credit")
         ? "Video generation requires Runway credits. Please add credits or try again later."
-        : `Runway API error: ${response.status}`;
+        : "Video generation failed. Please try again with a different photo.";
 
-      return new Response(JSON.stringify({ error: userMessage, details: errorText }), {
+      // Do NOT leak raw upstream error text to clients — keep it server-side only.
+      return new Response(JSON.stringify({ error: userMessage }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
