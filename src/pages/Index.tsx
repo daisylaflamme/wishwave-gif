@@ -6,11 +6,13 @@ import { ProgressOverlay } from "@/components/ProgressOverlay";
 import { ResultView } from "@/components/ResultView";
 import { GenerationHistory } from "@/components/GenerationHistory";
 import { ConfettiBackground } from "@/components/ConfettiBackground";
+import { SignInDialog } from "@/components/SignInDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MOTION_STYLES } from "@/lib/constants";
 import type { MotionStyle } from "@/lib/constants";
 import { useGeneration } from "@/hooks/useGeneration";
+import { useAuth } from "@/hooks/useAuth";
 import { Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,10 +20,26 @@ const Index = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [recipientMessage, setRecipientMessage] = useState("");
   const [motionStyle, setMotionStyle] = useState<MotionStyle>("wave");
+  const [signInOpen, setSignInOpen] = useState(false);
   const { status, error, result, generate, reset, setResult } = useGeneration();
+  const { user } = useAuth();
   const { toast } = useToast();
 
+  const requireAuth = (): boolean => {
+    if (!user) {
+      setSignInOpen(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleImageSelect = (file: File) => {
+    if (!requireAuth()) return;
+    setSelectedImage(file);
+  };
+
   const handleGenerate = () => {
+    if (!requireAuth()) return;
     if (!selectedImage) {
       toast({
         variant: "destructive",
@@ -62,7 +80,7 @@ const Index = () => {
     <div className="min-h-screen relative bg-gradient-soft">
       <ConfettiBackground />
       <div className="relative z-10">
-        <Header />
+        <Header onRequireSignIn={() => setSignInOpen(true)} />
 
         <main className="container max-w-2xl mx-auto px-4 pb-16">
           <div className="bg-card rounded-2xl shadow-lg border p-6 md:p-8 space-y-8">
@@ -78,7 +96,7 @@ const Index = () => {
                 Turn your photo into an animated GIF greeting
               </p>
               <ImageUpload
-                onImageSelect={setSelectedImage}
+                onImageSelect={handleImageSelect}
                 selectedImage={selectedImage}
                 onClear={() => setSelectedImage(null)}
               />
@@ -119,7 +137,7 @@ const Index = () => {
                 size="lg"
                 className="w-full text-lg h-14 gap-2 rounded-xl"
                 onClick={handleGenerate}
-                disabled={!selectedImage || status !== "idle"}
+                disabled={status !== "idle" || (!!user && !selectedImage)}
               >
                 <Wand2 className="h-5 w-5" />
                 Generate GIF
@@ -138,6 +156,8 @@ const Index = () => {
       </div>
 
       {status !== "idle" && status !== "ready" && <ProgressOverlay currentStatus={status} error={error} />}
+
+      <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
     </div>
   );
 };
