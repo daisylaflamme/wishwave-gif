@@ -9,13 +9,13 @@ export const MOTION_STYLES = [
     id: 'smile' as const,
     label: 'Smile',
     icon: '😊',
-    description: 'A warm smile',
+    description: 'A warm, subtle smile',
   },
   {
     id: 'nod' as const,
     label: 'Nod',
     icon: '🙂',
-    description: 'A friendly nod',
+    description: 'A gentle friendly nod',
   },
 ] as const;
 
