@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { MotionStyle } from "@/lib/constants";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { addSessionGenerationId } from "@/lib/sessionGenerations";
 
 interface GenerationState {
   status: "idle" | "uploading" | "generating_video" | "finalizing" | "ready";
@@ -50,6 +51,8 @@ export function useGeneration() {
           .single();
 
         if (insertError || !generation) throw new Error("Failed to create generation record");
+
+        addSessionGenerationId(generation.id);
 
         // 3. Start video generation
         setState((s) => ({ ...s, status: "generating_video" }));

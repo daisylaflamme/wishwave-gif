@@ -47,6 +47,18 @@
     --gradient-soft: linear-gradient(180deg, hsl(330 65% 96%), hsl(30 50% 98%));
     --gradient-card: linear-gradient(135deg, hsl(0 0% 100%), hsl(330 30% 98%));
   }
+}
+
+@layer utilities {
+  .bg-gradient-soft {
+    background: var(--gradient-soft);
+  }
+  .bg-gradient-warm {
+    background: var(--gradient-warm);
+  }
+  .bg-gradient-card {
+    background: var(--gradient-card);
+  }
 
   .dark {
     --background: 270 20% 8%;
