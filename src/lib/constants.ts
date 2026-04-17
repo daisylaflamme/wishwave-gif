@@ -3,7 +3,7 @@ export const MOTION_STYLES = [
     id: 'wave' as const,
     label: 'Wave',
     icon: '👋',
-    description: 'A gentle hand wave',
+    description: 'A natural hand wave',
   },
   {
     id: 'smile' as const,
