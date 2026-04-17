@@ -74,6 +74,9 @@ const Index = () => {
                 </span>
                 Upload a Photo
               </h2>
+              <p className="text-sm text-muted-foreground -mt-1">
+                Turn your photo into an animated GIF greeting
+              </p>
               <ImageUpload
                 onImageSelect={setSelectedImage}
                 selectedImage={selectedImage}
