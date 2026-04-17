@@ -23,12 +23,21 @@ WishWave is an AI-powered greeting card app that turns a single photo into a 5-s
 - **date-fns** — date formatting
 
 ### Backend (Lovable Cloud / Supabase)
-- **Postgres** — `generations` table tracks each greeting
-- **Storage** — `wishwave-uploads` (source photos) and `wishwave-generated` (rendered videos)
+- **Postgres** — `generations` table tracks each greeting (scoped per `user_id`)
+- **Storage** — `wishwave-uploads` (source photos, per-user folders) and `wishwave-generated` (rendered videos)
 - **Edge Functions** (Deno):
   - `runway-generate` — kicks off a Runway video generation job
   - `runway-poll` — polls Runway for job completion
   - `video-proxy` — CORS-safe proxy for fetching generated videos in the browser
+
+### Authentication & Authorization
+- **Lovable Cloud Auth** (`@lovable.dev/cloud-auth-js`) — managed OAuth broker for social sign-in
+- **Google OAuth** — sole sign-in provider, invoked via `lovable.auth.signInWithOAuth("google", ...)`
+- **Supabase Auth** (`@supabase/supabase-js`) — JWT session storage, `onAuthStateChange` listener, and `getUser()` token verification inside Edge Functions
+- **React Context** — `AuthProvider` + `useAuth` hook expose session/user state app-wide
+- **Guest-friendly gating** — home page is public; a `SignInDialog` (Radix UI) prompts Google sign-in on the first authenticated action (upload / generate)
+- **Row Level Security (RLS)** — Postgres policies restrict `generations` rows and storage objects to the owning `user_id`
+- **Edge Function authorization** — every call validates the caller's bearer token, verifies storage paths are scoped to `wishwave-uploads/<user_id>/`, and confirms `generationId` ownership before mutating
 
 ### Media Pipeline
 - **Runway gen4_turbo** — image-to-video model (5s, identity-preserving motion)
