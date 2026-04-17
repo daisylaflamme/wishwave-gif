@@ -87,16 +87,9 @@ export function useGeneration() {
         if (!videoUrl) throw new Error("Video generation timed out");
 
         // 5. Finalize — use static audio
+        // Note: the generations row is updated server-side by the runway-poll
+        // edge function (using the service role) once the job SUCCEEDED.
         setState((s) => ({ ...s, status: "finalizing" }));
-
-        // Update record to ready
-        await supabase
-          .from("generations")
-          .update({
-            status: "ready",
-            video_url: videoUrl,
-          })
-          .eq("id", generation.id);
 
         queryClient.invalidateQueries({ queryKey: ["generations"] });
 
