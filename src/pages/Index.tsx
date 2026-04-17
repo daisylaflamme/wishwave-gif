@@ -98,7 +98,7 @@ const Index = () => {
                   Short Message <span className="text-muted-foreground">(optional)</span>
                 </label>
                 <Input
-                  placeholder="e.g. Happy Birthday!"
+                  placeholder="Add a message (e.g., Happy Birthday!)"
                   value={recipientMessage}
                   onChange={(e) => setRecipientMessage(e.target.value)}
                   className="max-w-xs"
@@ -122,7 +122,7 @@ const Index = () => {
                 disabled={!selectedImage || status !== "idle"}
               >
                 <Wand2 className="h-5 w-5" />
-                Create Greeting
+                Generate GIF
               </Button>
             </div>
 
