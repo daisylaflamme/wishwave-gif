@@ -26,6 +26,7 @@ export type Database = {
           runway_job_id: string | null
           status: string
           updated_at: string
+          user_id: string
           video_url: string | null
         }
         Insert: {
@@ -39,6 +40,7 @@ export type Database = {
           runway_job_id?: string | null
           status?: string
           updated_at?: string
+          user_id: string
           video_url?: string | null
         }
         Update: {
@@ -52,6 +54,7 @@ export type Database = {
           runway_job_id?: string | null
           status?: string
           updated_at?: string
+          user_id?: string
           video_url?: string | null
         }
         Relationships: []
