@@ -11,7 +11,7 @@ export function Header() {
         <Sparkles className="h-8 w-8 text-accent" />
       </div>
       <p className="text-muted-foreground text-lg">
-        Turn a photo into a waving birthday wish
+        Turn your photo into an animated GIF with a natural wave, smile, or nod
       </p>
     </header>
   );
