@@ -12,6 +12,29 @@ serve(async (req) => {
   }
 
   try {
+    // --- Authenticate caller ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claims, error: claimsErr } = await userClient.auth.getClaims(token);
+    if (claimsErr || !claims?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = claims.claims.sub as string;
+
     const RUNWAY_API_KEY = Deno.env.get("RUNWAY_API_KEY");
     if (!RUNWAY_API_KEY) {
       return new Response(
@@ -27,6 +50,24 @@ serve(async (req) => {
         JSON.stringify({ error: "jobId is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const admin = SERVICE_ROLE ? createClient(SUPABASE_URL, SERVICE_ROLE) : null;
+
+    // Verify the generation belongs to the caller before proceeding
+    if (generationId && typeof generationId === "string" && admin) {
+      const { data: row, error: ownerErr } = await admin
+        .from("generations")
+        .select("user_id")
+        .eq("id", generationId)
+        .maybeSingle();
+      if (ownerErr || !row || row.user_id !== userId) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const response = await fetch(`https://api.dev.runwayml.com/v1/tasks/${encodeURIComponent(jobId)}`, {
@@ -47,27 +88,20 @@ serve(async (req) => {
     const data = await response.json();
     const videoUrl = data.output?.[0] || null;
 
-    // Server-side update of the generation row using the service role.
-    // Clients no longer have UPDATE permission on the generations table.
-    if (generationId && typeof generationId === "string") {
-      const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-      const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-      if (SUPABASE_URL && SERVICE_ROLE) {
-        const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-        const patch: Record<string, unknown> = { runway_job_id: jobId };
-        if (data.status === "SUCCEEDED" && videoUrl) {
-          patch.status = "ready";
-          patch.video_url = videoUrl;
-        } else if (data.status === "FAILED") {
-          patch.status = "failed";
-        }
-        const { error: updateError } = await admin
-          .from("generations")
-          .update(patch)
-          .eq("id", generationId);
-        if (updateError) {
-          console.error("runway-poll: failed to update generation:", updateError.message);
-        }
+    if (generationId && typeof generationId === "string" && admin) {
+      const patch: Record<string, unknown> = { runway_job_id: jobId };
+      if (data.status === "SUCCEEDED" && videoUrl) {
+        patch.status = "ready";
+        patch.video_url = videoUrl;
+      } else if (data.status === "FAILED") {
+        patch.status = "failed";
+      }
+      const { error: updateError } = await admin
+        .from("generations")
+        .update(patch)
+        .eq("id", generationId);
+      if (updateError) {
+        console.error("runway-poll: failed to update generation:", updateError.message);
       }
     }
 
