@@ -79,10 +79,13 @@ export function ImageUpload({ onImageSelect, selectedImage, onClear }: ImageUplo
         </div>
         <div>
           <p className="text-lg font-medium text-foreground">
-            Drop your photo here or click to upload
+            Drag & drop your photo or click to upload
           </p>
           <p className="text-sm text-muted-foreground mt-1">
-            Use a clear, front-facing photo of one person for best results
+            Best results: clear, front-facing photo
+          </p>
+          <p className="text-xs text-muted-foreground mt-3 font-medium tracking-wide">
+            🖼️ → 🎞️ Photo → GIF animation
           </p>
         </div>
       </div>
