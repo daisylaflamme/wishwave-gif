@@ -4,18 +4,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
 import { Sparkles } from "lucide-react";
 import { getSessionGenerationIds } from "@/lib/sessionGenerations";
+import { useAuth } from "@/hooks/useAuth";
 
 interface GenerationHistoryProps {
   onSelect: (generation: { videoUrl: string; recipientMessage: string | null }) => void;
 }
 
 export function GenerationHistory({ onSelect }: GenerationHistoryProps) {
+  const { user } = useAuth();
   const sessionIds = getSessionGenerationIds();
 
   const { data: generations } = useQuery({
-    queryKey: ["generations", "session", sessionIds.join(",")],
+    queryKey: ["generations", "session", user?.id, sessionIds.join(",")],
+    enabled: !!user && sessionIds.length > 0,
     queryFn: async () => {
-      if (sessionIds.length === 0) return [];
       const { data, error } = await supabase
         .from("generations")
         .select("*")

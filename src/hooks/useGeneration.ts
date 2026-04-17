@@ -27,8 +27,13 @@ export function useGeneration() {
       setState({ status: "uploading", error: null, result: null });
 
       try {
-        // 1. Upload image to storage
-        const fileName = `${Date.now()}-${file.name}`;
+        // 0. Require auth
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) throw new Error("You must be signed in to generate.");
+        const userId = session.user.id;
+
+        // 1. Upload image to storage under the user's folder (RLS-enforced)
+        const fileName = `${userId}/${Date.now()}-${file.name}`;
         const { error: uploadError } = await supabase.storage.from("wishwave-uploads").upload(fileName, file);
 
         if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
@@ -41,6 +46,7 @@ export function useGeneration() {
         const { data: generation, error: insertError } = await supabase
           .from("generations")
           .insert({
+            user_id: userId,
             image_url: imageUrl,
             recipient_name: recipientMessage || null,
             motion_style: motionStyle,
@@ -86,9 +92,7 @@ export function useGeneration() {
 
         if (!videoUrl) throw new Error("Video generation timed out");
 
-        // 5. Finalize — use static audio
-        // Note: the generations row is updated server-side by the runway-poll
-        // edge function (using the service role) once the job SUCCEEDED.
+        // 5. Finalize — server-side update happens in runway-poll
         setState((s) => ({ ...s, status: "finalizing" }));
 
         queryClient.invalidateQueries({ queryKey: ["generations"] });
