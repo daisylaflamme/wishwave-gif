@@ -59,7 +59,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen relative" style={{ background: "var(--gradient-soft)" }}>
+    <div className="min-h-screen relative bg-gradient-soft">
       <ConfettiBackground />
       <div className="relative z-10">
         <Header />
