@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 import { lovable } from "@/integrations/lovable/index";
 import { useToast } from "@/hooks/use-toast";
 
@@ -46,6 +47,22 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
         <Button size="lg" className="w-full h-12 rounded-xl mt-2" onClick={handleGoogle}>
           Continue with Google
         </Button>
+        <p className="text-xs text-muted-foreground text-center mt-3 leading-relaxed">
+          By continuing, you agree to our{" "}
+          <Link to="/legal#terms" className="underline hover:text-foreground" target="_blank">
+            Terms
+          </Link>
+          ,{" "}
+          <Link to="/legal#privacy" className="underline hover:text-foreground" target="_blank">
+            Privacy Policy
+          </Link>
+          , and{" "}
+          <Link to="/legal#content" className="underline hover:text-foreground" target="_blank">
+            Content Policy
+          </Link>
+          . You confirm you own the rights to any photo you upload and consent to its
+          processing. AI-generated content may be imperfect or inaccurate.
+        </p>
       </DialogContent>
     </Dialog>
   );
