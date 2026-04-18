@@ -6,9 +6,10 @@ interface ImageUploadProps {
   onImageSelect: (file: File) => void;
   selectedImage: File | null;
   onClear: () => void;
+  onRequireAuth?: () => boolean;
 }
 
-export function ImageUpload({ onImageSelect, selectedImage, onClear }: ImageUploadProps) {
+export function ImageUpload({ onImageSelect, selectedImage, onClear, onRequireAuth }: ImageUploadProps) {
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -22,9 +23,10 @@ export function ImageUpload({ onImageSelect, selectedImage, onClear }: ImageUplo
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
+    if (onRequireAuth && !onRequireAuth()) return;
     const file = e.dataTransfer.files[0];
     if (file) handleFile(file);
-  }, [handleFile]);
+  }, [handleFile, onRequireAuth]);
 
   const handleClear = () => {
     onClear();
@@ -59,6 +61,7 @@ export function ImageUpload({ onImageSelect, selectedImage, onClear }: ImageUplo
           : "border-border hover:border-primary/50 hover:bg-muted/50"
       }`}
       onClick={() => {
+        if (onRequireAuth && !onRequireAuth()) return;
         const input = document.createElement("input");
         input.type = "file";
         input.accept = "image/*";

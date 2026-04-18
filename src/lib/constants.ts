@@ -35,3 +35,5 @@ export const STATUS_STEPS = [
   { key: 'finalizing', label: 'Finalizing greeting' },
   { key: 'ready', label: 'Ready!' },
 ] as const;
+
+export const FREE_GENERATION_LIMIT = 3;

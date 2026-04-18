@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { ImageUpload } from "@/components/ImageUpload";
 import { StyleSelector } from "@/components/StyleSelector";
 import { ProgressOverlay } from "@/components/ProgressOverlay";
@@ -9,10 +11,11 @@ import { ConfettiBackground } from "@/components/ConfettiBackground";
 import { SignInDialog } from "@/components/SignInDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MOTION_STYLES } from "@/lib/constants";
+import { MOTION_STYLES, FREE_GENERATION_LIMIT } from "@/lib/constants";
 import type { MotionStyle } from "@/lib/constants";
 import { useGeneration } from "@/hooks/useGeneration";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,6 +28,22 @@ const Index = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  const { data: usedCount = 0 } = useQuery({
+    queryKey: ["generations", "count", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("generations")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "ready");
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  const limitReached = !!user && usedCount >= FREE_GENERATION_LIMIT;
+  const remaining = Math.max(0, FREE_GENERATION_LIMIT - usedCount);
+
   const requireAuth = (): boolean => {
     if (!user) {
       setSignInOpen(true);
@@ -35,11 +54,27 @@ const Index = () => {
 
   const handleImageSelect = (file: File) => {
     if (!requireAuth()) return;
+    if (limitReached) {
+      toast({
+        variant: "destructive",
+        title: "Free limit reached",
+        description: `You've used all ${FREE_GENERATION_LIMIT} free greetings.`,
+      });
+      return;
+    }
     setSelectedImage(file);
   };
 
   const handleGenerate = () => {
     if (!requireAuth()) return;
+    if (limitReached) {
+      toast({
+        variant: "destructive",
+        title: "Free limit reached",
+        description: `You've used all ${FREE_GENERATION_LIMIT} free greetings.`,
+      });
+      return;
+    }
     if (!selectedImage) {
       toast({
         variant: "destructive",
@@ -60,10 +95,10 @@ const Index = () => {
 
   if (result) {
     return (
-      <div className="min-h-screen relative">
+      <div className="min-h-screen relative flex flex-col">
         <ConfettiBackground />
-        <div className="relative z-10">
-          <Header />
+        <div className="relative z-10 flex-1">
+          <Header onRequireSignIn={() => setSignInOpen(true)} />
           <main className="container max-w-4xl mx-auto px-4 pb-16">
             <ResultView
               videoUrl={result.videoUrl}
@@ -72,6 +107,7 @@ const Index = () => {
             />
           </main>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -99,6 +135,7 @@ const Index = () => {
                 onImageSelect={handleImageSelect}
                 selectedImage={selectedImage}
                 onClear={() => setSelectedImage(null)}
+                onRequireAuth={requireAuth}
               />
             </div>
 
@@ -132,17 +169,34 @@ const Index = () => {
             </div>
 
             {/* Step 3: Generate */}
-            <div className="pt-2">
+            <div className="pt-2 space-y-3">
               <Button
                 size="lg"
                 className="w-full text-lg h-14 gap-2 rounded-xl"
                 onClick={handleGenerate}
-                disabled={status !== "idle" || (!!user && !selectedImage)}
+                disabled={status !== "idle" || (!!user && !selectedImage) || limitReached}
               >
                 <Wand2 className="h-5 w-5" />
                 Generate GIF
               </Button>
+              {user && (
+                <p className="text-xs text-center text-muted-foreground">
+                  {limitReached
+                    ? `You've used all ${FREE_GENERATION_LIMIT} free greetings.`
+                    : `${remaining} of ${FREE_GENERATION_LIMIT} free greetings remaining`}
+                </p>
+              )}
             </div>
+
+            {limitReached && (
+              <div className="rounded-lg bg-muted border border-border p-4 text-sm text-foreground text-center space-y-1">
+                <p className="font-medium">Free limit reached</p>
+                <p className="text-muted-foreground">
+                  You've used all {FREE_GENERATION_LIMIT} free greetings. Please contact us to
+                  generate more.
+                </p>
+              </div>
+            )}
 
             {error && (
               <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive text-center">
@@ -153,6 +207,7 @@ const Index = () => {
 
           <GenerationHistory onSelect={(gen) => setResult(gen)} />
         </main>
+        <Footer />
       </div>
 
       {status !== "idle" && status !== "ready" && <ProgressOverlay currentStatus={status} error={error} />}
