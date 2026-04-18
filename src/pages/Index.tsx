@@ -7,6 +7,7 @@ import { StyleSelector } from "@/components/StyleSelector";
 import { ProgressOverlay } from "@/components/ProgressOverlay";
 import { ResultView } from "@/components/ResultView";
 import { GenerationHistory } from "@/components/GenerationHistory";
+import { GifInfo } from "@/components/GifInfo";
 import { ConfettiBackground } from "@/components/ConfettiBackground";
 import { SignInDialog } from "@/components/SignInDialog";
 import { Button } from "@/components/ui/button";
@@ -131,6 +132,7 @@ const Index = () => {
               <p className="text-sm text-muted-foreground -mt-1">
                 Turn your photo into an animated GIF greeting
               </p>
+              <GifInfo />
               <ImageUpload
                 onImageSelect={handleImageSelect}
                 selectedImage={selectedImage}
