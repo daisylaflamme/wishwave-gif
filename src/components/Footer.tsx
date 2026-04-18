@@ -6,6 +6,15 @@ export function Footer() {
       <div className="container max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
         <span>© {new Date().getFullYear()} WishWave</span>
         <span aria-hidden>·</span>
+        <a
+          href="https://runwayml.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-foreground hover:underline"
+        >
+          Powered by Runway
+        </a>
+        <span aria-hidden>·</span>
         <Link to="/legal#terms" className="hover:text-foreground hover:underline">
           Terms
         </Link>
