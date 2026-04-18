@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { ImageUpload } from "@/components/ImageUpload";
 import { StyleSelector } from "@/components/StyleSelector";
 import { ProgressOverlay } from "@/components/ProgressOverlay";
@@ -9,10 +11,11 @@ import { ConfettiBackground } from "@/components/ConfettiBackground";
 import { SignInDialog } from "@/components/SignInDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MOTION_STYLES } from "@/lib/constants";
+import { MOTION_STYLES, FREE_GENERATION_LIMIT } from "@/lib/constants";
 import type { MotionStyle } from "@/lib/constants";
 import { useGeneration } from "@/hooks/useGeneration";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,6 +28,22 @@ const Index = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  const { data: usedCount = 0 } = useQuery({
+    queryKey: ["generations", "count", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("generations")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "ready");
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  const limitReached = !!user && usedCount >= FREE_GENERATION_LIMIT;
+  const remaining = Math.max(0, FREE_GENERATION_LIMIT - usedCount);
+
   const requireAuth = (): boolean => {
     if (!user) {
       setSignInOpen(true);
@@ -35,11 +54,27 @@ const Index = () => {
 
   const handleImageSelect = (file: File) => {
     if (!requireAuth()) return;
+    if (limitReached) {
+      toast({
+        variant: "destructive",
+        title: "Free limit reached",
+        description: `You've used all ${FREE_GENERATION_LIMIT} free greetings.`,
+      });
+      return;
+    }
     setSelectedImage(file);
   };
 
   const handleGenerate = () => {
     if (!requireAuth()) return;
+    if (limitReached) {
+      toast({
+        variant: "destructive",
+        title: "Free limit reached",
+        description: `You've used all ${FREE_GENERATION_LIMIT} free greetings.`,
+      });
+      return;
+    }
     if (!selectedImage) {
       toast({
         variant: "destructive",
