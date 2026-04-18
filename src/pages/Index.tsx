@@ -135,6 +135,7 @@ const Index = () => {
                 onImageSelect={handleImageSelect}
                 selectedImage={selectedImage}
                 onClear={() => setSelectedImage(null)}
+                onRequireAuth={requireAuth}
               />
             </div>
 
