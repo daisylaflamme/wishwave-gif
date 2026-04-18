@@ -181,7 +181,7 @@ export async function createGif(
       width: gifWidth,
       height: gifHeight,
       frames: frames.map((f) => ({
-        data: f.data,
+        data: f.data.buffer as ArrayBuffer,
         delay: f.delay,
       })),
       maxColors: 128,
