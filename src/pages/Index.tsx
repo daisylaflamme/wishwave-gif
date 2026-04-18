@@ -95,10 +95,10 @@ const Index = () => {
 
   if (result) {
     return (
-      <div className="min-h-screen relative">
+      <div className="min-h-screen relative flex flex-col">
         <ConfettiBackground />
-        <div className="relative z-10">
-          <Header />
+        <div className="relative z-10 flex-1">
+          <Header onRequireSignIn={() => setSignInOpen(true)} />
           <main className="container max-w-4xl mx-auto px-4 pb-16">
             <ResultView
               videoUrl={result.videoUrl}
@@ -107,6 +107,7 @@ const Index = () => {
             />
           </main>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -167,17 +168,34 @@ const Index = () => {
             </div>
 
             {/* Step 3: Generate */}
-            <div className="pt-2">
+            <div className="pt-2 space-y-3">
               <Button
                 size="lg"
                 className="w-full text-lg h-14 gap-2 rounded-xl"
                 onClick={handleGenerate}
-                disabled={status !== "idle" || (!!user && !selectedImage)}
+                disabled={status !== "idle" || (!!user && !selectedImage) || limitReached}
               >
                 <Wand2 className="h-5 w-5" />
                 Generate GIF
               </Button>
+              {user && (
+                <p className="text-xs text-center text-muted-foreground">
+                  {limitReached
+                    ? `You've used all ${FREE_GENERATION_LIMIT} free greetings.`
+                    : `${remaining} of ${FREE_GENERATION_LIMIT} free greetings remaining`}
+                </p>
+              )}
             </div>
+
+            {limitReached && (
+              <div className="rounded-lg bg-muted border border-border p-4 text-sm text-foreground text-center space-y-1">
+                <p className="font-medium">Free limit reached</p>
+                <p className="text-muted-foreground">
+                  You've used all {FREE_GENERATION_LIMIT} free greetings. Please contact us to
+                  generate more.
+                </p>
+              </div>
+            )}
 
             {error && (
               <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive text-center">
@@ -188,6 +206,7 @@ const Index = () => {
 
           <GenerationHistory onSelect={(gen) => setResult(gen)} />
         </main>
+        <Footer />
       </div>
 
       {status !== "idle" && status !== "ready" && <ProgressOverlay currentStatus={status} error={error} />}
