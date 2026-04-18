@@ -11,7 +11,7 @@ export function Header({ onRequireSignIn }: HeaderProps) {
 
   return (
     <header className="relative text-center py-8 px-4">
-      <div className="absolute right-4 top-4 flex items-center gap-2">
+      <div className="flex justify-end items-center gap-2 mb-4 sm:mb-0 sm:absolute sm:right-4 sm:top-4">
         {user ? (
           <>
             <span className="hidden sm:inline text-sm text-muted-foreground truncate max-w-[160px]">
