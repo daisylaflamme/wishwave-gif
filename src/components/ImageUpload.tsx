@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Upload, ImageIcon, X } from "lucide-react";
+import { Upload, ImageIcon, X, ArrowRight, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ImageUploadProps {
@@ -87,8 +87,12 @@ export function ImageUpload({ onImageSelect, selectedImage, onClear, onRequireAu
           <p className="text-sm text-muted-foreground mt-1">
             Best results: clear, front-facing photo
           </p>
-          <p className="text-xs text-muted-foreground mt-3 font-medium tracking-wide">
-            🖼️ → 🎞️ Photo → GIF animation
+          <p className="text-xs text-muted-foreground mt-3 font-medium tracking-wide flex items-center justify-center gap-1.5">
+            <ImageIcon className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>Photo</span>
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            <Video className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>GIF animation</span>
           </p>
         </div>
       </div>
