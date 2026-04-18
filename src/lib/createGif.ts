@@ -1,9 +1,12 @@
 import { encode } from "modern-gif";
+// Vite worker URL — bundled and served as a static asset, runs encoding off main thread.
+import gifWorkerUrl from "modern-gif/worker?url";
 
 const GIF_FPS = 10;
 const GIF_DURATION_SECONDS = 5;
 const FRAME_DELAY = Math.round(1000 / GIF_FPS);
-const TOTAL_FRAMES = GIF_DURATION_SECONDS * GIF_FPS;
+const TOTAL_FRAMES = GIF_DURATION_SECONDS * GIF_FPS; // 50
+const MAX_WIDTH = 512;
 
 async function fetchVideoBlob(videoUrl: string): Promise<string> {
   const proxyResponse = await fetch(
@@ -73,6 +76,16 @@ function drawOverlayText(
   ctx.shadowBlur = 0;
 }
 
+// Yield to the browser between heavy ops so the UI thread can paint progress.
+const yieldToMain = () =>
+  new Promise<void>((resolve) => {
+    if (typeof requestAnimationFrame !== "undefined") {
+      requestAnimationFrame(() => resolve());
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+
 export async function createGif(
   videoUrl: string,
   overlayText?: string | null,
@@ -85,31 +98,62 @@ export async function createGif(
     video.src = localUrl;
     video.muted = true;
     video.playsInline = true;
-    video.crossOrigin = "anonymous";
+    video.preload = "auto";
+    // crossOrigin not needed — blob URL is same-origin.
 
     await new Promise<void>((resolve, reject) => {
       video.onloadeddata = () => resolve();
       video.onerror = () => reject(new Error("Failed to load video"));
     });
 
-    const gifWidth = video.videoWidth;
-    const gifHeight = video.videoHeight;
+    // Downscale to MAX_WIDTH while preserving aspect ratio (and keeping even dimensions).
+    const srcW = video.videoWidth;
+    const srcH = video.videoHeight;
+    const scale = Math.min(1, MAX_WIDTH / srcW);
+    const gifWidth = Math.max(2, Math.round((srcW * scale) / 2) * 2);
+    const gifHeight = Math.max(2, Math.round((srcH * scale) / 2) * 2);
 
-    const canvas = document.createElement("canvas");
-    canvas.width = gifWidth;
-    canvas.height = gifHeight;
-    const ctx = canvas.getContext("2d")!;
+    // Use OffscreenCanvas when available to keep work off the main canvas pipeline.
+    const canvas =
+      typeof OffscreenCanvas !== "undefined"
+        ? new OffscreenCanvas(gifWidth, gifHeight)
+        : Object.assign(document.createElement("canvas"), {
+            width: gifWidth,
+            height: gifHeight,
+          });
+    if ("width" in canvas) {
+      canvas.width = gifWidth;
+      canvas.height = gifHeight;
+    }
+    const ctx = (canvas as HTMLCanvasElement | OffscreenCanvas).getContext(
+      "2d"
+    ) as CanvasRenderingContext2D;
+    // Lower-quality scaling = faster on mobile and good enough for GIF.
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "low";
 
     const normalizedText = overlayText?.trim() ?? "";
     const hasOverlay = normalizedText.length > 0;
 
-    const frames: { data: ImageData; delay: number }[] = [];
+    const frames: { data: Uint8ClampedArray; delay: number }[] = [];
 
     for (let i = 0; i < TOTAL_FRAMES; i++) {
       const time = i / GIF_FPS;
-      video.currentTime = time;
-      await new Promise<void>((resolve) => {
-        video.onseeked = () => resolve();
+      // Seek and wait — fast on small downscaled draws.
+      await new Promise<void>((resolve, reject) => {
+        const onSeeked = () => {
+          video.removeEventListener("seeked", onSeeked);
+          video.removeEventListener("error", onErr);
+          resolve();
+        };
+        const onErr = () => {
+          video.removeEventListener("seeked", onSeeked);
+          video.removeEventListener("error", onErr);
+          reject(new Error("Video seek failed"));
+        };
+        video.addEventListener("seeked", onSeeked);
+        video.addEventListener("error", onErr);
+        video.currentTime = time;
       });
 
       ctx.drawImage(video, 0, 0, gifWidth, gifHeight);
@@ -118,24 +162,30 @@ export async function createGif(
         drawOverlayText(ctx, normalizedText, gifWidth, gifHeight);
       }
 
+      const imageData = ctx.getImageData(0, 0, gifWidth, gifHeight);
       frames.push({
-        data: ctx.getImageData(0, 0, gifWidth, gifHeight),
+        data: imageData.data,
         delay: FRAME_DELAY,
       });
 
-      onProgress?.(Math.round(((i + 1) / TOTAL_FRAMES) * 90));
+      // Capture phase = 0–80% of progress; yield so the UI can repaint.
+      onProgress?.(Math.round(((i + 1) / TOTAL_FRAMES) * 80));
+      if (i % 3 === 0) await yieldToMain();
     }
 
-    onProgress?.(92);
+    onProgress?.(82);
+    await yieldToMain();
 
+    // Encode in a Web Worker so the UI thread stays responsive.
     const output = await encode({
       width: gifWidth,
       height: gifHeight,
       frames: frames.map((f) => ({
-        data: f.data.data,
+        data: f.data.buffer as ArrayBuffer,
         delay: f.delay,
       })),
       maxColors: 128,
+      workerUrl: gifWorkerUrl,
     });
 
     onProgress?.(100);
