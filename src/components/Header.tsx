@@ -1,20 +1,23 @@
 import { Sparkles, LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { CreditsBadge } from "@/components/CreditsBadge";
 
 interface HeaderProps {
   onRequireSignIn?: () => void;
+  onBuyCredits?: () => void;
 }
 
-export function Header({ onRequireSignIn }: HeaderProps) {
+export function Header({ onRequireSignIn, onBuyCredits }: HeaderProps) {
   const { user, signOut } = useAuth();
 
   return (
     <header className="relative text-center py-8 px-4">
-      <div className="flex justify-end items-center gap-2 mb-4 sm:mb-0 sm:absolute sm:right-4 sm:top-4">
+      <div className="flex flex-wrap justify-end items-center gap-2 mb-4 sm:mb-0 sm:absolute sm:right-4 sm:top-4">
+        {user && onBuyCredits && <CreditsBadge onBuyClick={onBuyCredits} />}
         {user ? (
           <>
-            <span className="hidden sm:inline text-sm text-muted-foreground truncate max-w-[160px]">
+            <span className="hidden md:inline text-sm text-muted-foreground truncate max-w-[160px]">
               {user.email}
             </span>
             <Button variant="ghost" size="sm" onClick={signOut} className="gap-1.5">
