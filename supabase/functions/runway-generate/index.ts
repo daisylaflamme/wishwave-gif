@@ -42,6 +42,28 @@ serve(async (req) => {
     }
     const userId = userData.user.id;
 
+    // --- Consume one credit (atomic, server-side) ---
+    const serviceClient = createClient(
+      supabaseUrl,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const { data: consumed, error: consumeErr } = await serviceClient.rpc("consume_credit", {
+      _user_id: userId,
+    });
+    if (consumeErr) {
+      console.error("consume_credit error:", consumeErr);
+      return new Response(JSON.stringify({ error: "Could not check credits" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!consumed) {
+      return new Response(
+        JSON.stringify({ error: "You're out of GIF credits. Please buy more to continue." }),
+        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const RUNWAY_API_KEY = Deno.env.get("RUNWAY_API_KEY");
     if (!RUNWAY_API_KEY) {
       return new Response(JSON.stringify({ error: "RUNWAY_API_KEY is not configured" }), {
