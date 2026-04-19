@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ImageUpload } from "@/components/ImageUpload";
@@ -10,14 +9,16 @@ import { GenerationHistory } from "@/components/GenerationHistory";
 import { GifInfo } from "@/components/GifInfo";
 import { ConfettiBackground } from "@/components/ConfettiBackground";
 import { SignInDialog } from "@/components/SignInDialog";
+import { PricingModal } from "@/components/PricingModal";
+import { PurchaseHistory } from "@/components/PurchaseHistory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MOTION_STYLES, FREE_GENERATION_LIMIT } from "@/lib/constants";
+import { MOTION_STYLES } from "@/lib/constants";
 import type { MotionStyle } from "@/lib/constants";
 import { useGeneration } from "@/hooks/useGeneration";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { Wand2 } from "lucide-react";
+import { useCredits } from "@/hooks/useCredits";
+import { Wand2, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
@@ -25,25 +26,20 @@ const Index = () => {
   const [recipientMessage, setRecipientMessage] = useState("");
   const [motionStyle, setMotionStyle] = useState<MotionStyle>("wave");
   const [signInOpen, setSignInOpen] = useState(false);
+  const [pricingOpen, setPricingOpen] = useState(false);
   const { status, error, result, generate, reset, setResult } = useGeneration();
   const { user } = useAuth();
+  const { credits, loading: creditsLoading } = useCredits();
   const { toast } = useToast();
 
-  const { data: usedCount = 0 } = useQuery({
-    queryKey: ["generations", "count", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("generations")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "ready");
-      if (error) throw error;
-      return count ?? 0;
-    },
-  });
+  const noCredits = !!user && !creditsLoading && credits <= 0;
 
-  const limitReached = !!user && usedCount >= FREE_GENERATION_LIMIT;
-  const remaining = Math.max(0, FREE_GENERATION_LIMIT - usedCount);
+  // Auto-open paywall when user lands with 0 credits and tries to interact
+  useEffect(() => {
+    if (noCredits && selectedImage) {
+      setPricingOpen(true);
+    }
+  }, [noCredits, selectedImage]);
 
   const requireAuth = (): boolean => {
     if (!user) {
@@ -55,12 +51,8 @@ const Index = () => {
 
   const handleImageSelect = (file: File) => {
     if (!requireAuth()) return;
-    if (limitReached) {
-      toast({
-        variant: "destructive",
-        title: "Free limit reached",
-        description: `You've used all ${FREE_GENERATION_LIMIT} free greetings.`,
-      });
+    if (noCredits) {
+      setPricingOpen(true);
       return;
     }
     setSelectedImage(file);
@@ -68,12 +60,8 @@ const Index = () => {
 
   const handleGenerate = () => {
     if (!requireAuth()) return;
-    if (limitReached) {
-      toast({
-        variant: "destructive",
-        title: "Free limit reached",
-        description: `You've used all ${FREE_GENERATION_LIMIT} free greetings.`,
-      });
+    if (noCredits) {
+      setPricingOpen(true);
       return;
     }
     if (!selectedImage) {
@@ -99,7 +87,10 @@ const Index = () => {
       <div className="min-h-screen relative flex flex-col">
         <ConfettiBackground />
         <div className="relative z-10 flex-1">
-          <Header onRequireSignIn={() => setSignInOpen(true)} />
+          <Header
+            onRequireSignIn={() => setSignInOpen(true)}
+            onBuyCredits={() => setPricingOpen(true)}
+          />
           <main className="container max-w-4xl mx-auto px-4 pb-16">
             <ResultView
               videoUrl={result.videoUrl}
@@ -108,6 +99,7 @@ const Index = () => {
             />
           </main>
         </div>
+        <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
         <Footer />
       </div>
     );
@@ -117,7 +109,10 @@ const Index = () => {
     <div className="min-h-screen relative bg-gradient-soft">
       <ConfettiBackground />
       <div className="relative z-10">
-        <Header onRequireSignIn={() => setSignInOpen(true)} />
+        <Header
+          onRequireSignIn={() => setSignInOpen(true)}
+          onBuyCredits={() => setPricingOpen(true)}
+        />
 
         <main className="container max-w-2xl mx-auto px-4 pb-16">
           <div className="bg-card rounded-2xl shadow-lg border p-6 md:p-8 space-y-8">
@@ -176,27 +171,34 @@ const Index = () => {
                 size="lg"
                 className="w-full text-lg h-14 gap-2 rounded-xl"
                 onClick={handleGenerate}
-                disabled={status !== "idle" || (!!user && !selectedImage) || limitReached}
+                disabled={status !== "idle" || (!!user && !selectedImage) || noCredits}
               >
                 <Wand2 className="h-5 w-5" />
                 Generate GIF
               </Button>
               {user && (
                 <p className="text-xs text-center text-muted-foreground">
-                  {limitReached
-                    ? `You've used all ${FREE_GENERATION_LIMIT} free greetings.`
-                    : `${remaining} of ${FREE_GENERATION_LIMIT} free greetings remaining`}
+                  {noCredits
+                    ? "You're out of GIF credits."
+                    : `${credits} ${credits === 1 ? "GIF" : "GIFs"} remaining (1 credit per GIF)`}
                 </p>
               )}
             </div>
 
-            {limitReached && (
-              <div className="rounded-lg bg-muted border border-border p-4 text-sm text-foreground text-center space-y-1">
-                <p className="font-medium">Free limit reached</p>
-                <p className="text-muted-foreground">
-                  You've used all {FREE_GENERATION_LIMIT} free greetings. Please contact us to
-                  generate more.
+            {noCredits && (
+              <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 text-sm text-foreground text-center space-y-2">
+                <p className="font-medium">You're out of credits</p>
+                <p className="text-muted-foreground text-xs">
+                  Buy more to keep creating animated GIF greetings.
                 </p>
+                <Button
+                  size="sm"
+                  onClick={() => setPricingOpen(true)}
+                  className="gap-1.5"
+                >
+                  <ShoppingCart className="h-3.5 w-3.5" />
+                  Buy GIF credits
+                </Button>
               </div>
             )}
 
@@ -208,13 +210,17 @@ const Index = () => {
           </div>
 
           <GenerationHistory onSelect={(gen) => setResult(gen)} />
+          <PurchaseHistory />
         </main>
         <Footer />
       </div>
 
-      {status !== "idle" && status !== "ready" && <ProgressOverlay currentStatus={status} error={error} />}
+      {status !== "idle" && status !== "ready" && (
+        <ProgressOverlay currentStatus={status} error={error} />
+      )}
 
       <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
+      <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
     </div>
   );
 };

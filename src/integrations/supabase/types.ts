@@ -59,12 +59,102 @@ export type Database = {
         }
         Relationships: []
       }
+      purchases: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          credits_added: number
+          currency: string
+          environment: string
+          id: string
+          package_name: string
+          price_id: string
+          product_id: string | null
+          status: string
+          stripe_event_id: string | null
+          stripe_session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          credits_added: number
+          currency?: string
+          environment?: string
+          id?: string
+          package_name: string
+          price_id: string
+          product_id?: string | null
+          status?: string
+          stripe_event_id?: string | null
+          stripe_session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          credits_added?: number
+          currency?: string
+          environment?: string
+          id?: string
+          package_name?: string
+          price_id?: string
+          product_id?: string | null
+          status?: string
+          stripe_event_id?: string | null
+          stripe_session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_credits: {
+        Row: {
+          created_at: string
+          credits: number
+          lifetime_purchased: number
+          lifetime_used: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits?: number
+          lifetime_purchased?: number
+          lifetime_used?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          lifetime_purchased?: number
+          lifetime_used?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_credits_from_purchase: {
+        Args: {
+          _amount_cents: number
+          _credits_added: number
+          _currency: string
+          _environment: string
+          _package_name: string
+          _price_id: string
+          _product_id: string
+          _stripe_event_id: string
+          _stripe_session_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      consume_credit: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
