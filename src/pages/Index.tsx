@@ -91,7 +91,7 @@ const Index = () => {
             onRequireSignIn={() => setSignInOpen(true)}
             onBuyCredits={() => setPricingOpen(true)}
           />
-          <main className="container max-w-4xl mx-auto px-4 pb-16">
+          <main className="container max-w-4xl mx-auto px-4 sm:px-6 pb-16">
             <ResultView
               videoUrl={result.videoUrl}
               recipientMessage={result.recipientMessage}
@@ -114,20 +114,21 @@ const Index = () => {
           onBuyCredits={() => setPricingOpen(true)}
         />
 
-        <main className="container max-w-2xl mx-auto px-4 pb-16">
+        <main className="container max-w-2xl mx-auto px-4 sm:px-6 pb-16">
           <div className="bg-card rounded-2xl shadow-lg border p-6 md:p-8 space-y-8">
             {/* Step 1: Upload */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <span className="h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
                   1
                 </span>
                 Upload a Photo
               </h2>
-              <p className="text-sm text-muted-foreground -mt-1">
-                Turn your photo into an animated GIF greeting
+              <p className="text-sm text-muted-foreground -mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span>Turn your photo into an animated GIF greeting</span>
+                <span className="text-muted-foreground/50">·</span>
+                <GifInfo />
               </p>
-              <GifInfo />
               <ImageUpload
                 onImageSelect={handleImageSelect}
                 selectedImage={selectedImage}

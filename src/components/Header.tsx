@@ -12,38 +12,44 @@ export function Header({ onRequireSignIn, onBuyCredits }: HeaderProps) {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="relative text-center py-8 px-4">
-      <div className="flex flex-wrap justify-end items-center gap-2 mb-4 sm:mb-0 sm:absolute sm:right-4 sm:top-4">
-        {user && onBuyCredits && <CreditsBadge onBuyClick={onBuyCredits} />}
-        {user ? (
-          <>
-            <span className="hidden md:inline text-sm text-muted-foreground truncate max-w-[160px]">
-              {user.email}
-            </span>
-            <Button variant="ghost" size="sm" onClick={signOut} className="gap-1.5">
-              <LogOut className="h-4 w-4" />
-              Sign out
-            </Button>
-          </>
-        ) : (
-          onRequireSignIn && (
-            <Button variant="ghost" size="sm" onClick={onRequireSignIn} className="gap-1.5">
-              <LogIn className="h-4 w-4" />
-              Sign in
-            </Button>
-          )
-        )}
+    <header className="w-full px-4 sm:px-6 pt-5 pb-8 sm:pb-12">
+      {/* Top bar: logo left, user controls right */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-8 sm:mb-12 min-h-[2.25rem]">
+        <div className="flex items-center" aria-hidden="true" />
+
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {user && onBuyCredits && <CreditsBadge onBuyClick={onBuyCredits} />}
+          {user ? (
+            <>
+              <span className="hidden md:inline text-sm text-muted-foreground truncate max-w-[160px]">
+                {user.email}
+              </span>
+              <Button variant="ghost" size="sm" onClick={signOut} className="gap-1.5">
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Sign out</span>
+              </Button>
+            </>
+          ) : (
+            onRequireSignIn && (
+              <Button variant="ghost" size="sm" onClick={onRequireSignIn} className="gap-1.5">
+                <LogIn className="h-4 w-4" />
+                Sign in
+              </Button>
+            )
+          )}
+        </div>
       </div>
-      <div className="flex items-center justify-center gap-2 mb-2">
-        <Sparkles className="h-8 w-8 text-primary" />
-        <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          WishWave
-        </h1>
-        <Sparkles className="h-8 w-8 text-accent" />
+
+      {/* Hero title */}
+      <div className="text-center">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            WishWave
+          </h1>
+          <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
+        </div>
       </div>
-      <p className="text-muted-foreground text-lg">
-        Turn your photo into an animated GIF with a natural wave, smile, or nod
-      </p>
     </header>
   );
 }
