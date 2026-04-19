@@ -14,13 +14,8 @@ export function Header({ onRequireSignIn, onBuyCredits }: HeaderProps) {
   return (
     <header className="w-full px-4 sm:px-6 pt-5 pb-8 sm:pb-12">
       {/* Top bar: logo left, user controls right */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-8 sm:mb-12">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-primary" />
-          <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            WishWave
-          </span>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-8 sm:mb-12 min-h-[2.25rem]">
+        <div className="flex items-center" aria-hidden="true" />
 
         <div className="flex flex-wrap items-center justify-end gap-2">
           {user && onBuyCredits && <CreditsBadge onBuyClick={onBuyCredits} />}
