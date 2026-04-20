@@ -10,6 +10,7 @@ import { GifInfo } from "@/components/GifInfo";
 import { ConfettiBackground } from "@/components/ConfettiBackground";
 import { SignInDialog } from "@/components/SignInDialog";
 import { PricingModal } from "@/components/PricingModal";
+import { SupportChatButton } from "@/components/support/SupportChatButton";
 import { PurchaseHistory } from "@/components/PurchaseHistory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,6 +101,7 @@ const Index = () => {
           </main>
         </div>
         <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
+        <SupportChatButton />
         <Footer />
       </div>
     );
@@ -222,6 +224,7 @@ const Index = () => {
 
       <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
       <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
+      <SupportChatButton hidden={status !== "idle" && status !== "ready"} />
     </div>
   );
 };
