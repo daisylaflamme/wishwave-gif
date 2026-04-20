@@ -10,6 +10,7 @@ import { GifInfo } from "@/components/GifInfo";
 import { ConfettiBackground } from "@/components/ConfettiBackground";
 import { SignInDialog } from "@/components/SignInDialog";
 import { PricingModal } from "@/components/PricingModal";
+import { SupportChatButton } from "@/components/support/SupportChatButton";
 import { PurchaseHistory } from "@/components/PurchaseHistory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
