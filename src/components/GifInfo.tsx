@@ -7,12 +7,58 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ImageOff } from "lucide-react";
 import exampleBefore from "@/assets/example-before.png";
 import exampleAfter from "@/assets/example-after.gif";
 
 interface GifInfoProps {
-  /** Render as inline link (default) or as standalone block */
   variant?: "link";
+}
+
+type LoadState = "loading" | "loaded" | "error";
+
+function PreviewImage({
+  src,
+  alt,
+  caption,
+}: {
+  src: string;
+  alt: string;
+  caption: string;
+}) {
+  const [state, setState] = useState<LoadState>("loading");
+
+  return (
+    <figure className="space-y-2">
+      <div className="relative w-full aspect-square rounded-lg border border-border overflow-hidden bg-muted">
+        {state === "loading" && (
+          <Skeleton className="absolute inset-0 rounded-none" />
+        )}
+        {state === "error" ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground text-xs">
+            <ImageOff className="h-6 w-6" aria-hidden="true" />
+            <span>Preview unavailable</span>
+          </div>
+        ) : (
+          <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            onLoad={() => setState("loaded")}
+            onError={() => setState("error")}
+            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+              state === "loaded" ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        )}
+      </div>
+      <figcaption className="text-xs text-center text-muted-foreground font-medium">
+        {caption}
+      </figcaption>
+    </figure>
+  );
 }
 
 export function GifInfo({ variant = "link" }: GifInfoProps) {
@@ -23,7 +69,7 @@ export function GifInfo({ variant = "link" }: GifInfoProps) {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="text-xs text-muted-foreground/80 hover:text-primary hover:underline underline-offset-2 transition-colors"
+          className="text-xs font-medium text-primary underline underline-offset-2 decoration-primary/60 hover:decoration-primary hover:text-primary/80 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
         >
           What is a GIF?
         </button>
@@ -36,30 +82,20 @@ export function GifInfo({ variant = "link" }: GifInfoProps) {
             Lightweight (much smaller than video) and silent (no sound).
           </DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-          <figure className="space-y-2">
-            <img
+        {open && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <PreviewImage
               src={exampleBefore}
               alt="Original photo before animation"
-              className="w-full rounded-lg border border-border"
-              loading="lazy"
+              caption="Before — your photo"
             />
-            <figcaption className="text-xs text-center text-muted-foreground font-medium">
-              Before — your photo
-            </figcaption>
-          </figure>
-          <figure className="space-y-2">
-            <img
+            <PreviewImage
               src={exampleAfter}
               alt="Animated GIF greeting result"
-              className="w-full rounded-lg border border-border"
-              loading="lazy"
+              caption="After — animated GIF"
             />
-            <figcaption className="text-xs text-center text-muted-foreground font-medium">
-              After — animated GIF
-            </figcaption>
-          </figure>
-        </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
