@@ -224,6 +224,7 @@ const Index = () => {
 
       <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
       <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
+      <SupportChatButton hidden={status !== "idle" && status !== "ready"} />
     </div>
   );
 };
