@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -11,11 +10,14 @@ export interface CreditsRow {
 
 export function useCredits() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: ["user_credits", user?.id],
     enabled: !!user,
+    // Poll every 10s instead of using Realtime (Realtime channel auth would
+    // otherwise expose other users' credit updates).
+    refetchInterval: 10_000,
+    refetchOnWindowFocus: true,
     queryFn: async (): Promise<CreditsRow> => {
       const { data, error } = await supabase
         .from("user_credits")
@@ -26,29 +28,6 @@ export function useCredits() {
       return data ?? { credits: 0, lifetime_purchased: 0, lifetime_used: 0 };
     },
   });
-
-  // Realtime: refresh credits when row changes (after webhook adds credits)
-  useEffect(() => {
-    if (!user) return;
-    const channel = supabase
-      .channel(`user_credits:${user.id}:${Math.random().toString(36).slice(2)}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "user_credits",
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["user_credits", user.id] });
-        },
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, queryClient]);
 
   return {
     credits: query.data?.credits ?? 0,
