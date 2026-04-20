@@ -101,6 +101,7 @@ const Index = () => {
           </main>
         </div>
         <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
+        <SupportChatButton />
         <Footer />
       </div>
     );
