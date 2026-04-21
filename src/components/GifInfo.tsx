@@ -32,7 +32,10 @@ function PreviewImage({
     <figure className="space-y-2">
       <div className="relative w-full aspect-square rounded-lg border border-border overflow-hidden bg-muted">
         {state === "loading" && (
-          <Skeleton className="absolute inset-0 rounded-none" />
+          <div className="absolute inset-0 flex items-center justify-center bg-muted">
+            <Loader2 className="h-7 w-7 text-muted-foreground animate-spin" aria-hidden="true" />
+            <span className="sr-only">Loading preview…</span>
+          </div>
         )}
         {state === "error" ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground text-xs">
