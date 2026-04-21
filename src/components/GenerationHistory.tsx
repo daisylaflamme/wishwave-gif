@@ -87,14 +87,14 @@ export function GenerationHistory({ onSelect }: GenerationHistoryProps) {
               <Button
                 variant="destructive"
                 size="icon"
-                className="absolute top-2 right-2 h-7 w-7 rounded-full z-10 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity shadow-md"
+                className="absolute top-2 right-2 h-9 w-9 sm:h-8 sm:w-8 rounded-full z-10 shadow-md sm:opacity-80 sm:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
                 onClick={(e) => {
                   e.stopPropagation();
                   setPendingDeleteId(gen.id);
                 }}
                 aria-label={`Delete ${label}`}
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-4 w-4" />
               </Button>
               <CardContent
                 className="p-0 cursor-pointer"

@@ -10,6 +10,8 @@ import { Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { lovable } from "@/integrations/lovable/index";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 interface SignInDialogProps {
   open: boolean;
@@ -18,6 +20,12 @@ interface SignInDialogProps {
 
 export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Auto-close immediately after successful sign-in
+  useEffect(() => {
+    if (open && user) onOpenChange(false);
+  }, [open, user, onOpenChange]);
 
   const handleGoogle = async () => {
     const result = await lovable.auth.signInWithOAuth("google", {
