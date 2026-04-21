@@ -102,6 +102,32 @@ serve(async (req) => {
       if (updateError) {
         console.error("runway-poll: failed to update generation:", updateError.message);
       }
+
+      // Auto-delete the original uploaded image once the GIF is generated (success or failure).
+      if (data.status === "SUCCEEDED" || data.status === "FAILED") {
+        try {
+          const { data: gen } = await admin
+            .from("generations")
+            .select("image_url")
+            .eq("id", generationId)
+            .maybeSingle();
+          const imageUrl: string | undefined = gen?.image_url;
+          const marker = "/storage/v1/object/public/wishwave-uploads/";
+          if (imageUrl && imageUrl.includes(marker)) {
+            const path = decodeURIComponent(imageUrl.split(marker)[1] ?? "");
+            if (path) {
+              const { error: rmErr } = await admin.storage
+                .from("wishwave-uploads")
+                .remove([path]);
+              if (rmErr) {
+                console.error("runway-poll: failed to delete original image:", rmErr.message);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("runway-poll: error deleting original image:", e);
+        }
+      }
     }
 
     return new Response(

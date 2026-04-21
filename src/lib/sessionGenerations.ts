@@ -20,3 +20,12 @@ export function addSessionGenerationId(id: string): void {
     // ignore
   }
 }
+
+export function removeSessionGenerationId(id: string): void {
+  try {
+    const ids = getSessionGenerationIds().filter((x) => x !== id);
+    sessionStorage.setItem(KEY, JSON.stringify(ids));
+  } catch {
+    // ignore
+  }
+}
