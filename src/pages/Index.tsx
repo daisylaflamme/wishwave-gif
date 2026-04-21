@@ -139,7 +139,7 @@ const Index = () => {
                 Upload a Photo
               </h2>
               <p className="text-sm text-muted-foreground -mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span>Turn your photo into an animated GIF greeting</span>
+                <span>One portrait → a tiny, shareable reaction GIF in seconds.</span>
                 <span className="text-muted-foreground/50">·</span>
                 <GifInfo />
               </p>
