@@ -1,13 +1,40 @@
 import { useEffect, useState } from "react";
-import { Download, RotateCcw, Loader2, Sparkles } from "lucide-react";
+import { Download, RotateCcw, Loader2, Sparkles, Link as LinkIcon, Mail, MessageCircle, Share2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createGif } from "@/lib/createGif";
+import { toast } from "sonner";
 
 interface ResultViewProps {
   videoUrl: string;
   recipientMessage?: string | null;
   onCreateAnother: () => void;
 }
+
+// Brand icons (inline SVG, sized 16px)
+const WhatsAppIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
+    <path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 0 1 8.413 3.488 11.82 11.82 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 0 0 1.51 5.26L3.7 19.05l3.954-1.057zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.149-.174.198-.298.298-.496.099-.198.05-.372-.025-.521-.074-.149-.669-1.611-.916-2.206-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/>
+  </svg>
+);
+const FacebookIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
+    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+  </svg>
+);
+const XIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+  </svg>
+);
+const InstagramIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <rect x="2" y="2" width="20" height="20" rx="5"/>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+  </svg>
+);
+
+const SHARE_TEXT = "Check out my AI-generated WishWave GIF ✨";
 
 export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: ResultViewProps) {
   const [gifBlob, setGifBlob] = useState<Blob | null>(null);
@@ -49,26 +76,83 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
     };
   }, [gifUrl]);
 
-  const handleDownload = () => {
-    if (!gifBlob) return;
-    const fileLabel = (recipientMessage || "greeting")
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "greeting";
-    const filename = `wishwave-${fileLabel}.gif`;
+  const fileLabel = (recipientMessage || "greeting")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "greeting";
+  const filename = `wishwave-${fileLabel}.gif`;
 
-    const url = URL.createObjectURL(gifBlob);
+  const downloadBlob = (blob: Blob, name: string) => {
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = filename;
+    a.download = name;
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
   };
 
+  const handleDownload = () => {
+    if (!gifBlob) return;
+    downloadBlob(gifBlob, filename);
+  };
+
+  const shareUrl = videoUrl;
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Link copied");
+    } catch {
+      toast.error("Couldn't copy. Try again.");
+    }
+  };
+
+  const openShare = (url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer,width=600,height=600");
+  };
+
+  const handleWhatsApp = () => openShare(`https://wa.me/?text=${encodeURIComponent(`${SHARE_TEXT} ${shareUrl}`)}`);
+  const handleFacebook = () => openShare(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`);
+  const handleX = () => openShare(`https://twitter.com/intent/tweet?text=${encodeURIComponent(SHARE_TEXT)}&url=${encodeURIComponent(shareUrl)}`);
+  const handleEmail = () => {
+    window.location.href = `mailto:?subject=${encodeURIComponent("My WishWave GIF")}&body=${encodeURIComponent(`${SHARE_TEXT}\n\n${shareUrl}`)}`;
+  };
+  const handleInstagram = () => {
+    if (gifBlob) downloadBlob(gifBlob, filename);
+    toast("Saved! Now upload it to Instagram", {
+      description: "Instagram doesn't support direct sharing — open the app and post your GIF.",
+    });
+  };
+  const handleNativeShare = async () => {
+    if (!gifBlob) return;
+    try {
+      const file = new File([gifBlob], filename, { type: "image/gif" });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: "WishWave GIF", text: SHARE_TEXT });
+      } else if (navigator.share) {
+        await navigator.share({ title: "WishWave GIF", text: SHARE_TEXT, url: shareUrl });
+      } else {
+        await handleCopyLink();
+      }
+    } catch (e) {
+      // user dismissed — silent
+    }
+  };
+  const canNativeShare = typeof navigator !== "undefined" && "share" in navigator;
+
   return (
     <div className="max-w-lg mx-auto space-y-6">
+      {/* Success banner */}
+      {gifUrl && (
+        <div className="flex items-center justify-center gap-2 text-sm font-medium text-foreground animate-in fade-in slide-in-from-top-2 duration-500">
+          <CheckCircle2 className="h-4 w-4 text-primary" />
+          Your GIF is ready
+        </div>
+      )}
+
+      {/* GIF preview */}
       <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-primary/10 bg-muted min-h-[200px] flex items-center justify-center">
         {gifUrl && (
           <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 rounded-full bg-background/85 backdrop-blur px-2 py-0.5 text-[10px] font-medium text-foreground border border-border shadow-sm">
@@ -90,6 +174,7 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
         )}
       </div>
 
+      {/* Primary actions */}
       <div className="flex gap-3 justify-center">
         <Button onClick={handleDownload} disabled={!gifBlob} className="gap-2">
           <Download className="h-4 w-4" />
@@ -100,6 +185,63 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
           Create Another
         </Button>
       </div>
+
+      {/* Share section */}
+      {gifBlob && (
+        <div className="rounded-2xl border border-border bg-card/50 p-5 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground">Share your GIF</h3>
+            {canNativeShare && (
+              <button
+                onClick={handleNativeShare}
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="More share options"
+              >
+                <Share2 className="h-3.5 w-3.5" />
+                More
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            <ShareIconButton label="WhatsApp" onClick={handleWhatsApp} icon={<WhatsAppIcon />} />
+            <ShareIconButton label="Facebook" onClick={handleFacebook} icon={<FacebookIcon />} />
+            <ShareIconButton label="X" onClick={handleX} icon={<XIcon />} />
+            <ShareIconButton label="Instagram" onClick={handleInstagram} icon={<InstagramIcon />} />
+            <ShareIconButton label="Email" onClick={handleEmail} icon={<Mail className="h-4 w-4" />} />
+            <ShareIconButton label="Copy link" onClick={handleCopyLink} icon={<LinkIcon className="h-4 w-4" />} />
+          </div>
+
+          <p className="text-[11px] text-muted-foreground text-center pt-1">
+            For Instagram & iMessage: download the GIF, then attach it in the app.
+          </p>
+        </div>
+      )}
     </div>
+  );
+}
+
+function ShareIconButton({
+  label,
+  icon,
+  onClick,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      className="group flex flex-col items-center gap-1.5 focus:outline-none"
+    >
+      <span className="h-11 w-11 rounded-full border border-border bg-background flex items-center justify-center text-foreground/80 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors shadow-sm">
+        {icon}
+      </span>
+      <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">
+        {label}
+      </span>
+    </button>
   );
 }
