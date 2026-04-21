@@ -82,8 +82,11 @@ serve(async (req) => {
     }
 
     // Validate imageUrl originates from this user's own folder in wishwave-uploads.
-    const expectedPrefix = `${supabaseUrl.replace(/\/$/, "")}/storage/v1/object/public/wishwave-uploads/${userId}/`;
-    if (!imageUrl.startsWith(expectedPrefix)) {
+    // Accept either public URLs or signed URLs (since the bucket is private).
+    const baseUrl = supabaseUrl.replace(/\/$/, "");
+    const publicPrefix = `${baseUrl}/storage/v1/object/public/wishwave-uploads/${userId}/`;
+    const signedPrefix = `${baseUrl}/storage/v1/object/sign/wishwave-uploads/${userId}/`;
+    if (!imageUrl.startsWith(publicPrefix) && !imageUrl.startsWith(signedPrefix)) {
       console.error("runway-generate: rejected imageUrl from disallowed origin:", imageUrl);
       return new Response(JSON.stringify({ error: "imageUrl must be a photo you uploaded in this app" }), {
         status: 400,
