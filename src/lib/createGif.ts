@@ -23,7 +23,18 @@ async function fetchVideoBlob(videoUrl: string): Promise<string> {
   );
 
   if (!proxyResponse.ok) {
-    throw new Error(`Failed to fetch video: ${proxyResponse.status}`);
+    let message = `Failed to fetch video: ${proxyResponse.status}`;
+    try {
+      const data = await proxyResponse.json();
+      if (data?.expired || proxyResponse.status === 410) {
+        message = "This video link has expired. Please regenerate the GIF from a fresh creation.";
+      } else if (data?.error) {
+        message = data.error;
+      }
+    } catch {
+      // ignore
+    }
+    throw new Error(message);
   }
 
   const blob = await proxyResponse.blob();
