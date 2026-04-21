@@ -7,8 +7,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ImageOff } from "lucide-react";
+import { ImageOff, Loader2 } from "lucide-react";
 import exampleBefore from "@/assets/example-before.png";
 import exampleAfter from "@/assets/example-after.gif";
 
