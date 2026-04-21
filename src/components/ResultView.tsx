@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Download, RotateCcw, Loader2 } from "lucide-react";
+import { Download, RotateCcw, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createGif } from "@/lib/createGif";
 
@@ -70,8 +70,14 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
   return (
     <div className="max-w-lg mx-auto space-y-6">
       <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-primary/10 bg-muted min-h-[200px] flex items-center justify-center">
+        {gifUrl && (
+          <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 rounded-full bg-background/85 backdrop-blur px-2 py-0.5 text-[10px] font-medium text-foreground border border-border shadow-sm">
+            <Sparkles className="h-3 w-3 text-primary" />
+            AI-generated
+          </span>
+        )}
         {gifUrl ? (
-          <img src={gifUrl} alt="Your greeting" className="w-full" />
+          <img src={gifUrl} alt="Your AI-generated greeting" className="w-full" />
         ) : error ? (
           <div className="p-6 text-center text-destructive text-sm">{error}</div>
         ) : (

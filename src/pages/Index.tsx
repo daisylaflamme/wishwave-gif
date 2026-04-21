@@ -14,6 +14,8 @@ import { SupportChatButton } from "@/components/support/SupportChatButton";
 import { PurchaseHistory } from "@/components/PurchaseHistory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Link } from "react-router-dom";
 import { MOTION_STYLES } from "@/lib/constants";
 import type { MotionStyle } from "@/lib/constants";
 import { useGeneration } from "@/hooks/useGeneration";
@@ -28,6 +30,7 @@ const Index = () => {
   const [motionStyle, setMotionStyle] = useState<MotionStyle>("wave");
   const [signInOpen, setSignInOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
+  const [consent, setConsent] = useState(false);
   const { status, error, result, generate, reset, setResult } = useGeneration();
   const { user } = useAuth();
   const { credits, loading: creditsLoading } = useCredits();
@@ -73,6 +76,14 @@ const Index = () => {
       });
       return;
     }
+    if (!consent) {
+      toast({
+        variant: "destructive",
+        title: "Please confirm consent",
+        description: "You need permission from anyone in the photo before we can generate.",
+      });
+      return;
+    }
     generate(selectedImage, recipientMessage, motionStyle);
   };
 
@@ -80,6 +91,7 @@ const Index = () => {
     setSelectedImage(null);
     setRecipientMessage("");
     setMotionStyle("wave");
+    setConsent(false);
     reset();
   };
 
@@ -168,13 +180,35 @@ const Index = () => {
               />
             </div>
 
+            {/* Consent */}
+            {selectedImage && (
+              <label className="flex items-start gap-3 rounded-lg border border-border bg-muted/40 p-3 cursor-pointer hover:bg-muted/60 transition-colors">
+                <Checkbox
+                  checked={consent}
+                  onCheckedChange={(v) => setConsent(v === true)}
+                  className="mt-0.5"
+                  aria-label="I confirm I have permission to use this image"
+                />
+                <span className="text-sm text-foreground/90 leading-snug">
+                  I confirm I have permission to use this image, including from any
+                  identifiable person in it.{" "}
+                  <Link
+                    to="/legal#consent"
+                    className="text-primary underline underline-offset-2 hover:opacity-80"
+                  >
+                    Learn more
+                  </Link>
+                </span>
+              </label>
+            )}
+
             {/* Step 3: Generate */}
             <div className="pt-2 space-y-3">
               <Button
                 size="lg"
                 className="w-full text-lg h-14 gap-2 rounded-xl"
                 onClick={handleGenerate}
-                disabled={status !== "idle" || (!!user && !selectedImage) || noCredits}
+                disabled={status !== "idle" || (!!user && !selectedImage) || noCredits || (!!selectedImage && !consent)}
               >
                 <Wand2 className="h-5 w-5" />
                 Generate GIF

@@ -15,14 +15,14 @@ export function Footer() {
           Powered by Runway
         </a>
         <span aria-hidden>·</span>
-        <Link to="/legal#terms" className="hover:text-foreground hover:underline">
-          Terms
+        <Link to="/legal" className="hover:text-foreground hover:underline">
+          Trust & Safety
         </Link>
         <Link to="/legal#privacy" className="hover:text-foreground hover:underline">
           Privacy
         </Link>
-        <Link to="/legal#content" className="hover:text-foreground hover:underline">
-          Content Policy
+        <Link to="/legal#report" className="hover:text-foreground hover:underline">
+          Report abuse
         </Link>
       </div>
     </footer>
