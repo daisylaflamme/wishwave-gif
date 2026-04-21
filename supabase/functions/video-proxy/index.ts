@@ -63,11 +63,22 @@ serve(async (req) => {
     const upstream = await fetch(check.url.toString());
 
     if (!upstream.ok) {
-      console.error("video-proxy upstream error:", upstream.status);
-      return new Response(JSON.stringify({ error: `Video fetch failed: ${upstream.status}` }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error("video-proxy upstream error:", upstream.status, check.url.toString());
+      // 401/403 from Runway's CloudFront usually means the signed _jwt token expired.
+      const expired = upstream.status === 401 || upstream.status === 403;
+      return new Response(
+        JSON.stringify({
+          error: expired
+            ? "This video link has expired. Please regenerate the GIF."
+            : `Video fetch failed: ${upstream.status}`,
+          expired,
+          upstreamStatus: upstream.status,
+        }),
+        {
+          status: expired ? 410 : 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     return new Response(upstream.body, {
