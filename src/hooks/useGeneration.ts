@@ -38,9 +38,16 @@ export function useGeneration() {
 
         if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
 
-        const { data: urlData } = supabase.storage.from("wishwave-uploads").getPublicUrl(fileName);
+        const { data: signedData, error: signedErr } = await supabase
+          .storage
+          .from("wishwave-uploads")
+          .createSignedUrl(fileName, 60 * 60); // 1 hour
 
-        const imageUrl = urlData.publicUrl;
+        if (signedErr || !signedData?.signedUrl) {
+          throw new Error("Could not prepare image for generation");
+        }
+
+        const imageUrl = signedData.signedUrl;
 
         // 2. Create generation record
         const { data: generation, error: insertError } = await supabase
