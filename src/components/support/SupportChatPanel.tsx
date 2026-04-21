@@ -191,7 +191,7 @@ export function SupportChatPanel({ open, onClose }: Props) {
             )}
           </div>
           <a
-            href="mailto:otli4ni4ka@gmail.com"
+            href="mailto:administrator@daisylaflamme.net"
             className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
           >
             <Mail className="h-3 w-3" />

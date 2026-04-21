@@ -28,8 +28,8 @@ const PACKS: Pack[] = [
   {
     priceId: "credits_10_onetime",
     credits: 10,
-    price: "$5.99",
-    perGif: "$0.60 each",
+    price: "$6.99",
+    perGif: "$0.70 each",
     badge: "Best value",
     highlight: true,
   },

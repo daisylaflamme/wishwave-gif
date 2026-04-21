@@ -41,7 +41,7 @@ export function Header({ onRequireSignIn, onBuyCredits }: HeaderProps) {
       </div>
 
       {/* Hero title */}
-      <div className="text-center">
+      <div className="text-center max-w-2xl mx-auto">
         <div className="flex items-center justify-center gap-2 mb-3">
           <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -49,6 +49,11 @@ export function Header({ onRequireSignIn, onBuyCredits }: HeaderProps) {
           </h1>
           <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
         </div>
+        <p className="text-base sm:text-lg text-muted-foreground leading-relaxed px-4">
+          Turn one portrait into a{" "}
+          <span className="text-foreground font-medium">tiny, shareable reaction GIF</span>{" "}
+          in seconds.
+        </p>
       </div>
     </header>
   );
