@@ -61,6 +61,13 @@ const Index = () => {
       return;
     }
     setSelectedImage(file);
+    // ImageUpload also writes to uploadCache, but ensure file ref is stored.
+    uploadCache.set(file, uploadCache.get().preview);
+  };
+
+  const handleClearImage = () => {
+    setSelectedImage(null);
+    uploadCache.clear();
   };
 
   const handleGenerate = () => {
@@ -93,6 +100,7 @@ const Index = () => {
     setRecipientMessage("");
     setMotionStyle("wave");
     setConsent(false);
+    uploadCache.clear();
     reset();
   };
 
