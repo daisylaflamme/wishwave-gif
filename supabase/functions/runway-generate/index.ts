@@ -101,7 +101,9 @@ serve(async (req) => {
       });
     }
 
-    const prompt = MOTION_PROMPTS[motionStyle || "wave"] || MOTION_PROMPTS.wave;
+    const selectedMotion = typeof motionStyle === "string" && MOTION_PROMPTS[motionStyle] ? motionStyle : "wave";
+    const prompt = MOTION_PROMPTS[selectedMotion];
+    console.log("runway-generate: motionStyle received =", motionStyle, "→ using:", selectedMotion);
 
     const response = await fetch("https://api.dev.runwayml.com/v1/image_to_video", {
       method: "POST",
