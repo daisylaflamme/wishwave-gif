@@ -155,7 +155,7 @@ const Index = () => {
               <ImageUpload
                 onImageSelect={handleImageSelect}
                 selectedImage={selectedImage}
-                onClear={() => setSelectedImage(null)}
+                onClear={handleClearImage}
                 onRequireAuth={requireAuth}
               />
             </div>
