@@ -11,7 +11,7 @@ export default function Auth() {
   const { toast } = useToast();
 
   useEffect(() => {
-    document.title = "Sign in — WishWave";
+    document.title = "Sign in — GifSpark";
   }, []);
 
   if (loading) return null;
@@ -36,7 +36,7 @@ export default function Auth() {
         <div className="flex items-center justify-center gap-2">
           <Sparkles className="h-7 w-7 text-primary" />
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            WishWave
+            GifSpark
           </h1>
         </div>
         <div className="space-y-2">

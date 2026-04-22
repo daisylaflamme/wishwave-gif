@@ -34,7 +34,7 @@ const InstagramIcon = () => (
   </svg>
 );
 
-const SHARE_TEXT = "Check out my AI-generated WishWave GIF ✨";
+const SHARE_TEXT = "Check out my AI-generated GifSpark GIF ✨";
 
 export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: ResultViewProps) {
   const [gifBlob, setGifBlob] = useState<Blob | null>(null);
@@ -117,7 +117,7 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
   const handleFacebook = () => openShare(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`);
   const handleX = () => openShare(`https://twitter.com/intent/tweet?text=${encodeURIComponent(SHARE_TEXT)}&url=${encodeURIComponent(shareUrl)}`);
   const handleEmail = () => {
-    window.location.href = `mailto:?subject=${encodeURIComponent("My WishWave GIF")}&body=${encodeURIComponent(`${SHARE_TEXT}\n\n${shareUrl}`)}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent("My GifSpark GIF")}&body=${encodeURIComponent(`${SHARE_TEXT}\n\n${shareUrl}`)}`;
   };
   const handleInstagram = () => {
     if (gifBlob) downloadBlob(gifBlob, filename);
@@ -130,9 +130,9 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
     try {
       const file = new File([gifBlob], filename, { type: "image/gif" });
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: "WishWave GIF", text: SHARE_TEXT });
+        await navigator.share({ files: [file], title: "GifSpark GIF", text: SHARE_TEXT });
       } else if (navigator.share) {
-        await navigator.share({ title: "WishWave GIF", text: SHARE_TEXT, url: shareUrl });
+        await navigator.share({ title: "GifSpark GIF", text: SHARE_TEXT, url: shareUrl });
       } else {
         await handleCopyLink();
       }
