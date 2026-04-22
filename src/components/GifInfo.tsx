@@ -80,10 +80,21 @@ export function GifInfo({ variant = "link" }: GifInfoProps) {
         <DialogHeader>
           <DialogTitle>Photo → Animated GIF</DialogTitle>
           <DialogDescription>
-            A short looping animation — share it instantly via text or email.
-            Lightweight (much smaller than video) and silent (no sound).
+            A 5-second looping animation made from your photo — silent, lightweight,
+            and easy to share on iMessage, WhatsApp, email, or social.
           </DialogDescription>
         </DialogHeader>
+        <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-muted-foreground">
+          <li className="rounded-md bg-muted/50 px-3 py-2">
+            <span className="font-medium text-foreground">5-sec loop</span> — plays on repeat
+          </li>
+          <li className="rounded-md bg-muted/50 px-3 py-2">
+            <span className="font-medium text-foreground">Tiny file</span> — sends instantly
+          </li>
+          <li className="rounded-md bg-muted/50 px-3 py-2">
+            <span className="font-medium text-foreground">Works everywhere</span> — no app needed
+          </li>
+        </ul>
         {open && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
             <PreviewImage
