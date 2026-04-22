@@ -1,6 +1,7 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Upload, ImageIcon, X, ArrowRight, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { uploadCache } from "@/lib/uploadCache";
 
 interface ImageUploadProps {
   onImageSelect: (file: File) => void;
@@ -11,13 +12,31 @@ interface ImageUploadProps {
 
 export function ImageUpload({ onImageSelect, selectedImage, onClear, onRequireAuth }: ImageUploadProps) {
   const [dragOver, setDragOver] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(() => uploadCache.get().preview);
+
+  // Restore preview after navigation (e.g., user clicked Learn more then came back).
+  useEffect(() => {
+    if (selectedImage && !preview) {
+      const cached = uploadCache.get();
+      if (cached.preview && cached.file === selectedImage) {
+        setPreview(cached.preview);
+      } else {
+        const url = URL.createObjectURL(selectedImage);
+        setPreview(url);
+        uploadCache.set(selectedImage, url);
+      }
+    }
+    if (!selectedImage && preview) {
+      setPreview(null);
+    }
+  }, [selectedImage, preview]);
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;
     onImageSelect(file);
     const url = URL.createObjectURL(file);
     setPreview(url);
+    uploadCache.set(file, url);
   }, [onImageSelect]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -30,7 +49,7 @@ export function ImageUpload({ onImageSelect, selectedImage, onClear, onRequireAu
 
   const handleClear = () => {
     onClear();
-    if (preview) URL.revokeObjectURL(preview);
+    uploadCache.clear();
     setPreview(null);
   };
 
