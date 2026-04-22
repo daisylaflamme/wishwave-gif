@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkle } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -34,11 +34,10 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-soft px-4">
       <div className="w-full max-w-md bg-card rounded-2xl shadow-lg border p-8 text-center space-y-6">
         <div className="flex items-center justify-center gap-2">
-          <Sparkle className="h-6 w-6 text-primary fill-primary" />
+          <Sparkles className="h-7 w-7 text-primary" />
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             GifSpark
           </h1>
-          <Sparkle className="h-6 w-6 text-accent fill-accent" />
         </div>
         <div className="space-y-2">
           <h2 className="text-lg font-semibold text-foreground">Sign in to continue</h2>

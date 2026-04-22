@@ -1,4 +1,4 @@
-import { Sparkle, LogOut, LogIn } from "lucide-react";
+import { Sparkles, LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { CreditsBadge } from "@/components/CreditsBadge";
@@ -43,11 +43,11 @@ export function Header({ onRequireSignIn, onBuyCredits }: HeaderProps) {
       {/* Hero title */}
       <div className="text-center max-w-2xl mx-auto">
         <div className="flex items-center justify-center gap-2 mb-3">
-          <Sparkle className="h-6 w-6 sm:h-7 sm:w-7 text-primary fill-primary" />
+          <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             GifSpark
           </h1>
-          <Sparkle className="h-6 w-6 sm:h-7 sm:w-7 text-accent fill-accent" />
+          <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
         </div>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed px-4">
           Turn one portrait into a{" "}
