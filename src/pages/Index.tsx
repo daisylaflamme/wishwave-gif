@@ -118,6 +118,8 @@ const Index = () => {
     setMotionStyle("wave");
     setConsent(false);
     uploadCache.clear();
+    sessionStorage.removeItem(MOTION_STORAGE_KEY);
+    sessionStorage.removeItem(RECIPIENT_STORAGE_KEY);
     reset();
   };
 
