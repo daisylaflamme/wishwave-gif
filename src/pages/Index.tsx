@@ -21,11 +21,12 @@ import type { MotionStyle } from "@/lib/constants";
 import { useGeneration } from "@/hooks/useGeneration";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
+import { uploadCache } from "@/lib/uploadCache";
 import { Wand2, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(() => uploadCache.get().file);
   const [recipientMessage, setRecipientMessage] = useState("");
   const [motionStyle, setMotionStyle] = useState<MotionStyle>("wave");
   const [signInOpen, setSignInOpen] = useState(false);
