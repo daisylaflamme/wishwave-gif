@@ -5,7 +5,7 @@ Yes, this is very feasible. Lovable has a built-in **Lovable AI Gateway** which 
 
 ### 1. Backend — Edge Function (`supabase/functions/support-chat/index.ts`)
 - Streams responses from Lovable AI Gateway (SSE)
-- System prompt restricts answers to WishWave topics (GIF creation, pricing, credits, uploads, performance, troubleshooting)
+- System prompt restricts answers to GifSpark topics (GIF creation, pricing, credits, uploads, performance, troubleshooting)
 - Accepts conversation history + lightweight user context (credit balance, signed-in state) injected server-side from JWT
 - Smart context: if `credits === 0`, system prompt nudges toward buying more
 - Handles 429 (rate limit) and 402 (out of credits) with friendly messages

@@ -1,4 +1,4 @@
-// Floating support chat for WishWave — streams from Lovable AI Gateway
+// Floating support chat for GifSpark — streams from Lovable AI Gateway
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -20,9 +20,9 @@ function buildSystemPrompt(ctx?: Body["context"]): string {
   const credits = ctx?.credits ?? null;
 
   const lines = [
-    "You are the WishWave support assistant. WishWave turns a user's photo into a 5-second animated GIF birthday/greeting card.",
+    "You are the GifSpark support assistant. GifSpark turns a user's photo into a 5-second animated GIF birthday/greeting card.",
     "",
-    "ANSWER ONLY questions about WishWave: how to create a GIF, photo guidelines, motion styles, adding a message, pricing & credits, payments, downloads, generation time/performance, account/sign-in, troubleshooting. Politely decline unrelated topics in one short sentence.",
+    "ANSWER ONLY questions about GifSpark: how to create a GIF, photo guidelines, motion styles, adding a message, pricing & credits, payments, downloads, generation time/performance, account/sign-in, troubleshooting. Politely decline unrelated topics in one short sentence.",
     "",
     "Keep answers SHORT (2–4 sentences max). Use simple language. Use markdown lists only when truly helpful. Never invent features or prices.",
     "",

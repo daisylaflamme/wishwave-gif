@@ -1,6 +1,6 @@
-# WishWave
+# GifSpark
 
-WishWave is an AI-powered greeting card app that turns a single photo into a 5-second animated birthday greeting, exported as an animated GIF with an optional message overlay.
+GifSpark is an AI-powered greeting card app that turns a single photo into a 5-second animated birthday greeting, exported as an animated GIF with an optional message overlay.
 
 ## Features
 

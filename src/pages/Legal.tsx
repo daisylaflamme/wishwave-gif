@@ -35,7 +35,7 @@ const Legal = () => {
             Built on trust, by design.
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            We built WishWave to be fun, safe, and respectful. You stay in control
+            We built GifSpark to be fun, safe, and respectful. You stay in control
             of your data, your images, and how they're used.
           </p>
         </div>
@@ -65,7 +65,7 @@ const Legal = () => {
           id="overview"
           icon={<Shield className="h-5 w-5" />}
           title="The basics"
-          subtitle="Five things that are always true at WishWave."
+          subtitle="Five things that are always true at GifSpark."
         >
           <ul className="space-y-3">
             {[
@@ -168,7 +168,7 @@ const Legal = () => {
           subtitle="What AI can — and can't — do here."
         >
           <ul className="list-disc pl-5 space-y-2 text-foreground/90">
-            <li>All animations on WishWave are generated using AI.</li>
+            <li>All animations on GifSpark are generated using AI.</li>
             <li>
               Results may not always be perfectly accurate, realistic, or true to
               the original photo.
@@ -220,12 +220,12 @@ const Legal = () => {
           subtitle="See something off? Let us know."
         >
           <p className="text-foreground/90 mb-4">
-            If you believe content on WishWave violates our policy — or uses your
+            If you believe content on GifSpark violates our policy — or uses your
             likeness without permission — please report it. We review and remove
             violating content quickly.
           </p>
           <Button asChild size="lg" className="gap-2">
-            <a href={`mailto:${SUPPORT_EMAIL}?subject=Report%20abuse%20on%20WishWave`}>
+            <a href={`mailto:${SUPPORT_EMAIL}?subject=Report%20abuse%20on%20GifSpark`}>
               <Mail className="h-4 w-4" />
               Report content
             </a>

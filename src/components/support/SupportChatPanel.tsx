@@ -93,7 +93,7 @@ export function SupportChatPanel({ open, onClose }: Props) {
               <Sparkles className="h-4 w-4 text-primary" />
             </div>
             <div className="leading-tight">
-              <p className="text-sm font-semibold text-foreground">WishWave Assistant</p>
+              <p className="text-sm font-semibold text-foreground">GifSpark Assistant</p>
               <p className="text-[11px] text-muted-foreground">Ask about GIFs, credits & more</p>
             </div>
           </div>
@@ -164,7 +164,7 @@ export function SupportChatPanel({ open, onClose }: Props) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask anything about WishWave…"
+              placeholder="Ask anything about GifSpark…"
               rows={1}
               className="min-h-[40px] max-h-32 resize-none text-sm py-2"
             />
