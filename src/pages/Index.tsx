@@ -25,13 +25,30 @@ import { uploadCache } from "@/lib/uploadCache";
 import { Wand2, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+const MOTION_STORAGE_KEY = "wishwave:motionStyle";
+const RECIPIENT_STORAGE_KEY = "wishwave:recipientMessage";
+
 const Index = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(() => uploadCache.get().file);
-  const [recipientMessage, setRecipientMessage] = useState("");
-  const [motionStyle, setMotionStyle] = useState<MotionStyle>("wave");
+  const [recipientMessage, setRecipientMessage] = useState(
+    () => (typeof window !== "undefined" && sessionStorage.getItem(RECIPIENT_STORAGE_KEY)) || "",
+  );
+  const [motionStyle, setMotionStyle] = useState<MotionStyle>(() => {
+    if (typeof window === "undefined") return "wave";
+    const stored = sessionStorage.getItem(MOTION_STORAGE_KEY) as MotionStyle | null;
+    return stored && MOTION_STYLES.some((m) => m.id === stored) ? stored : "wave";
+  });
   const [signInOpen, setSignInOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [consent, setConsent] = useState(false);
+
+  // Persist motion + message across navigation (e.g. visiting /legal)
+  useEffect(() => {
+    sessionStorage.setItem(MOTION_STORAGE_KEY, motionStyle);
+  }, [motionStyle]);
+  useEffect(() => {
+    sessionStorage.setItem(RECIPIENT_STORAGE_KEY, recipientMessage);
+  }, [recipientMessage]);
   const { status, error, result, generate, reset, setResult } = useGeneration();
   const { user } = useAuth();
   const { credits, loading: creditsLoading } = useCredits();
@@ -101,6 +118,8 @@ const Index = () => {
     setMotionStyle("wave");
     setConsent(false);
     uploadCache.clear();
+    sessionStorage.removeItem(MOTION_STORAGE_KEY);
+    sessionStorage.removeItem(RECIPIENT_STORAGE_KEY);
     reset();
   };
 

@@ -6,12 +6,19 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const PROMPT_BASE =
+  "Animate ONLY the person(s) present in the uploaded image. Keep facial identity, features, skin tone, hair, and clothing exactly as in the original — no morphing, no distortion, no face swap. Camera must remain perfectly stable: no zoom, no pan, no crop, no reframing. Preserve original composition, proportions, and background unchanged. DO NOT add new people, faces, objects, or background elements. DO NOT extend the image beyond its original boundaries. Motion must be subtle, realistic, and physically believable, contained within the original frame. Produce a smooth 5-second clip that loops seamlessly (start and end states should match closely). If MULTIPLE people are present, EVERY person must perform the action independently and simultaneously — none stay still — without merging or syncing unnaturally.";
+
+const MOUTH_CLOSED =
+  "CRITICAL: The mouth MUST stay closed and still — the person is NOT talking, NOT speaking, lips do not move as if forming words.";
+
 const MOTION_PROMPTS: Record<string, string> = {
-  wave: "Animate only the person(s) in the image. Each person raises one hand to head/shoulder height in front of the body and clearly waves it side to side (left-right, back and forth) 2-3 times — a recognizable waving gesture. Add a soft closed-mouth smile. Mouth must stay closed and still: NO talking, NO speaking, NO lip movement. If multiple people are present, EVERY person waves independently at the same time — none stay still. Do not add new people, faces, or background. Do not change framing, zoom, camera angle, or extend beyond the original image. Preserve identity, proportions, and composition exactly. No extra limbs, no distortion. Motion stays inside the original frame and looks stable and believable.",
-
-  smile: "Animate only the person(s) in the image with a subtle natural closed-mouth smile and minimal facial movement. Mouth must NOT open to talk: NO speaking, NO lip movement forming words. If multiple people are present, EVERY person smiles independently at the same time — none stay neutral. Do not add new people or change the background. Do not change framing or camera. Preserve identity, proportions, and layout exactly. No morphing or face blending. Motion must be minimal, stable, and realistic within the original frame.",
-
-  nod: "Animate only the person(s) in the image with a gentle friendly head nod (small up-and-down head movement) and a slight closed-mouth smile. Mouth stays closed and still: NO talking, NO speaking, NO lip movement, no words being formed. If multiple people are present, EVERY person nods independently at the same time — none stay still. Do not add new people or elements. Do not move or crop the camera. Preserve identity and composition exactly. No distortion or exaggerated movement. Motion stays subtle and contained within the original image.",
+  wave: `${PROMPT_BASE} ACTION — WAVE: The person raises one hand to head/shoulder height in front of the body and clearly moves the hand side to side (right and left, back and forth) like a real waving gesture, repeating the side-to-side motion 2–3 times across the 5 seconds. Add a soft natural closed-mouth smile. ${MOUTH_CLOSED}`,
+  smile: `${PROMPT_BASE} ACTION — SMILE: Apply a subtle, natural, warm smile with minimal facial movement. Only a gentle closed-mouth or softly parted smile that grows slightly and holds. ${MOUTH_CLOSED}`,
+  dance: `${PROMPT_BASE} ACTION — DANCE: The person performs a small, playful dance in place — gentle shoulder sway and subtle side-to-side hip/torso movement to a cheerful rhythm, with relaxed arm motion. Keep feet roughly planted; no large displacement. Add a light closed-mouth smile. Movement should feel joyful but contained. ${MOUTH_CLOSED}`,
+  thumbs_up: `${PROMPT_BASE} ACTION — THUMBS UP: The person raises one hand into frame at chest height and gives a clear, confident thumbs-up gesture, holding it briefly, with a friendly closed-mouth smile. The thumbs-up must be clearly visible and recognizable. ${MOUTH_CLOSED}`,
+  celebrate: `${PROMPT_BASE} ACTION — CELEBRATE: The person performs a cheerful celebration — both arms raised upward or outward in a joyful gesture (like a small "yay"), with a happy expression and a closed-mouth or softly smiling face. Slight head tilt is okay. Keep movement smooth and contained within the frame. ${MOUTH_CLOSED}`,
+  laugh: `${PROMPT_BASE} ACTION — LAUGH: The person gives a genuine, happy laugh — natural smile that widens, light shoulder shake, subtle head movement. Mouth may open slightly as in real laughter, but the person is NOT speaking and forms NO words; lips do not shape syllables. Expression must look authentic and warm.`,
 };
 
 serve(async (req) => {
@@ -94,7 +101,9 @@ serve(async (req) => {
       });
     }
 
-    const prompt = MOTION_PROMPTS[motionStyle || "wave"] || MOTION_PROMPTS.wave;
+    const selectedMotion = typeof motionStyle === "string" && MOTION_PROMPTS[motionStyle] ? motionStyle : "wave";
+    const prompt = MOTION_PROMPTS[selectedMotion];
+    console.log("runway-generate: motionStyle received =", motionStyle, "→ using:", selectedMotion);
 
     const response = await fetch("https://api.dev.runwayml.com/v1/image_to_video", {
       method: "POST",
