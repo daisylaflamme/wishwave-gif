@@ -54,13 +54,9 @@ export const MOTION_PROMPTS: Record<MotionStyle, string> = {
   laugh: `${PROMPT_BASE} ACTION — LAUGH: The person gives a genuine, happy laugh — natural smile that widens, light shoulder shake, subtle head movement. Mouth may open slightly as in real laughter, but the person is NOT speaking and forms NO words; lips do not shape syllables. Expression must look authentic and warm.`,
 };
 
-export const STATIC_AUDIO_PATH = "/assets/audio/happy-birthday.m4a";
-
 export const STATUS_STEPS = [
   { key: 'uploading', label: 'Uploading image' },
   { key: 'generating_video', label: 'Generating motion' },
   { key: 'finalizing', label: 'Finalizing greeting' },
   { key: 'ready', label: 'Ready!' },
 ] as const;
-
-export const FREE_GENERATION_LIMIT = 3;
