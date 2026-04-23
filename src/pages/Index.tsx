@@ -58,15 +58,16 @@ const Index = () => {
   const { user } = useAuth();
   const { credits, loading: creditsLoading } = useCredits();
   const { toast } = useToast();
+  const native = isNativeApp();
 
   const noCredits = !!user && !creditsLoading && credits <= 0;
 
-  // Auto-open paywall when user lands with 0 credits and tries to interact
+  // Auto-open paywall when user lands with 0 credits and tries to interact (web only).
   useEffect(() => {
-    if (noCredits && selectedImage) {
+    if (!native && noCredits && selectedImage) {
       setPricingOpen(true);
     }
-  }, [noCredits, selectedImage]);
+  }, [native, noCredits, selectedImage]);
 
   const requireAuth = (): boolean => {
     if (!user) {
@@ -76,10 +77,21 @@ const Index = () => {
     return true;
   };
 
+  const handleOutOfCredits = () => {
+    if (native) {
+      toast({
+        title: "You're out of GIF credits",
+        description: "Manage your account on gifspark.app",
+      });
+    } else {
+      setPricingOpen(true);
+    }
+  };
+
   const handleImageSelect = (file: File) => {
     if (!requireAuth()) return;
     if (noCredits) {
-      setPricingOpen(true);
+      handleOutOfCredits();
       return;
     }
     setSelectedImage(file);
@@ -95,7 +107,7 @@ const Index = () => {
   const handleGenerate = () => {
     if (!requireAuth()) return;
     if (noCredits) {
-      setPricingOpen(true);
+      handleOutOfCredits();
       return;
     }
     if (!selectedImage) {
@@ -135,7 +147,7 @@ const Index = () => {
         <div className="relative z-10 flex-1">
           <Header
             onRequireSignIn={() => setSignInOpen(true)}
-            onBuyCredits={() => setPricingOpen(true)}
+            onBuyCredits={native ? undefined : () => setPricingOpen(true)}
           />
           <main className="container max-w-4xl mx-auto px-4 sm:px-6 pb-16">
             <ResultView
@@ -145,7 +157,7 @@ const Index = () => {
             />
           </main>
         </div>
-        {pricingOpen && (
+        {!native && pricingOpen && (
           <Suspense fallback={null}>
             <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
           </Suspense>
@@ -162,7 +174,7 @@ const Index = () => {
       <div className="relative z-10">
         <Header
           onRequireSignIn={() => setSignInOpen(true)}
-          onBuyCredits={() => setPricingOpen(true)}
+          onBuyCredits={native ? undefined : () => setPricingOpen(true)}
         />
 
         <main className="container max-w-2xl mx-auto px-4 sm:px-6 pb-16">
