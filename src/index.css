@@ -96,9 +96,60 @@
     @apply border-border;
   }
 
-  body {
+  html, body {
     @apply bg-background text-foreground;
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
   }
+
+  body {
+    /* Allow text selection only where it matters (inputs, textareas, the result block). */
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  input, textarea, [contenteditable], .selectable {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  button, a, [role="button"] {
+    touch-action: manipulation;
+  }
+
+  /* On touch-only devices, neutralize hover-only feedback so buttons don't
+     stay in a "hovered" state after tap. */
+  @media (hover: none) {
+    .hover\:bg-primary:hover,
+    .hover\:bg-muted\/60:hover,
+    .hover\:bg-muted\/50:hover,
+    .hover\:text-foreground:hover,
+    .hover\:underline:hover {
+      background-color: revert;
+      color: revert;
+      text-decoration: revert;
+    }
+  }
+
+  /* Smooth scrolling on iOS */
+  .scroll-touch,
+  [data-radix-scroll-area-viewport],
+  .overflow-auto,
+  .overflow-y-auto,
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@layer utilities {
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .pl-safe { padding-left: env(safe-area-inset-left); }
+  .pr-safe { padding-right: env(safe-area-inset-right); }
+  .mt-safe { margin-top: env(safe-area-inset-top); }
+  .mb-safe { margin-bottom: env(safe-area-inset-bottom); }
+  .bottom-safe { bottom: calc(env(safe-area-inset-bottom) + 1.25rem); }
+  .top-safe { top: calc(env(safe-area-inset-top) + 0.5rem); }
 }
 
 @keyframes float {
