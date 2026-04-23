@@ -142,7 +142,11 @@ const Index = () => {
             />
           </main>
         </div>
-        <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
+        {pricingOpen && (
+          <Suspense fallback={null}>
+            <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
+          </Suspense>
+        )}
         <SupportChatButton />
         <Footer />
       </div>
@@ -287,7 +291,11 @@ const Index = () => {
       )}
 
       <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
-      <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
+      {pricingOpen && (
+        <Suspense fallback={null}>
+          <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
+        </Suspense>
+      )}
       <SupportChatButton hidden={status !== "idle" && status !== "ready"} />
     </div>
   );
