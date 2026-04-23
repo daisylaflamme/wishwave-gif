@@ -76,10 +76,10 @@ export function GifInfo({ variant = "link" }: GifInfoProps) {
           What is a GIF?
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Photo → Animated GIF</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="text-left">
+          <DialogTitle className="text-base sm:text-lg">Photo → Animated GIF</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">
             A 5-second looping animation made from your photo — silent, lightweight,
             and easy to share on iMessage, WhatsApp, email, or social.
           </DialogDescription>
@@ -96,7 +96,7 @@ export function GifInfo({ variant = "link" }: GifInfoProps) {
           </li>
         </ul>
         {open && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-2">
             <PreviewImage
               src={exampleBefore}
               alt="Original photo before animation"
