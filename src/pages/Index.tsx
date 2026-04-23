@@ -24,8 +24,11 @@ import { useGeneration } from "@/hooks/useGeneration";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { uploadCache } from "@/lib/uploadCache";
-import { Wand2, ShoppingCart } from "lucide-react";
+import { Wand2, ShoppingCart, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { isNativeApp, openExternal } from "@/lib/platform";
+
+const WEB_APP_URL = "https://gifspark.lovable.app";
 
 const MOTION_STORAGE_KEY = "wishwave:motionStyle";
 const RECIPIENT_STORAGE_KEY = "wishwave:recipientMessage";
