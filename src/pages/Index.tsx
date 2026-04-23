@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ImageUpload } from "@/components/ImageUpload";
@@ -9,7 +9,9 @@ import { GenerationHistory } from "@/components/GenerationHistory";
 import { GifInfo } from "@/components/GifInfo";
 import { ConfettiBackground } from "@/components/ConfettiBackground";
 import { SignInDialog } from "@/components/SignInDialog";
-import { PricingModal } from "@/components/PricingModal";
+const PricingModal = lazy(() =>
+  import("@/components/PricingModal").then((m) => ({ default: m.PricingModal }))
+);
 import { SupportChatButton } from "@/components/support/SupportChatButton";
 import { PurchaseHistory } from "@/components/PurchaseHistory";
 import { Button } from "@/components/ui/button";
@@ -140,7 +142,11 @@ const Index = () => {
             />
           </main>
         </div>
-        <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
+        {pricingOpen && (
+          <Suspense fallback={null}>
+            <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
+          </Suspense>
+        )}
         <SupportChatButton />
         <Footer />
       </div>
@@ -285,7 +291,11 @@ const Index = () => {
       )}
 
       <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
-      <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
+      {pricingOpen && (
+        <Suspense fallback={null}>
+          <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
+        </Suspense>
+      )}
       <SupportChatButton hidden={status !== "idle" && status !== "ready"} />
     </div>
   );
