@@ -81,7 +81,7 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "") || "greeting";
-  const filename = `wishwave-${fileLabel}.gif`;
+  const filename = `gifspark-${fileLabel}.gif`;
 
   const downloadBlob = (blob: Blob, name: string) => {
     const url = URL.createObjectURL(blob);
