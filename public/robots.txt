@@ -12,3 +12,7 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /auth
+Disallow: /payment-success
+
+Sitemap: https://gifspark.lovable.app/sitemap.xml
