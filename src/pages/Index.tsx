@@ -274,17 +274,36 @@ const Index = () => {
             {noCredits && (
               <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 text-sm text-foreground text-center space-y-2">
                 <p className="font-medium">You're out of credits</p>
-                <p className="text-muted-foreground text-xs">
-                  Buy more to keep creating animated GIF greetings.
-                </p>
-                <Button
-                  size="sm"
-                  onClick={() => setPricingOpen(true)}
-                  className="gap-1.5"
-                >
-                  <ShoppingCart className="h-3.5 w-3.5" />
-                  Buy GIF credits
-                </Button>
+                {native ? (
+                  <>
+                    <p className="text-muted-foreground text-xs">
+                      Manage your account on the GifSpark website.
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openExternal(WEB_APP_URL)}
+                      className="gap-1.5"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Manage on gifspark.app
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-muted-foreground text-xs">
+                      Buy more to keep creating animated GIF greetings.
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => setPricingOpen(true)}
+                      className="gap-1.5"
+                    >
+                      <ShoppingCart className="h-3.5 w-3.5" />
+                      Buy GIF credits
+                    </Button>
+                  </>
+                )}
               </div>
             )}
 
@@ -296,7 +315,7 @@ const Index = () => {
           </div>
 
           <GenerationHistory onSelect={(gen) => setResult(gen)} />
-          <PurchaseHistory />
+          {!native && <PurchaseHistory />}
         </main>
         <Footer />
       </div>
@@ -306,7 +325,7 @@ const Index = () => {
       )}
 
       <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
-      {pricingOpen && (
+      {!native && pricingOpen && (
         <Suspense fallback={null}>
           <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
         </Suspense>
