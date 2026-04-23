@@ -24,8 +24,11 @@ import { useGeneration } from "@/hooks/useGeneration";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { uploadCache } from "@/lib/uploadCache";
-import { Wand2, ShoppingCart } from "lucide-react";
+import { Wand2, ShoppingCart, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { isNativeApp, openExternal } from "@/lib/platform";
+
+const WEB_APP_URL = "https://gifspark.lovable.app";
 
 const MOTION_STORAGE_KEY = "wishwave:motionStyle";
 const RECIPIENT_STORAGE_KEY = "wishwave:recipientMessage";
@@ -55,15 +58,16 @@ const Index = () => {
   const { user } = useAuth();
   const { credits, loading: creditsLoading } = useCredits();
   const { toast } = useToast();
+  const native = isNativeApp();
 
   const noCredits = !!user && !creditsLoading && credits <= 0;
 
-  // Auto-open paywall when user lands with 0 credits and tries to interact
+  // Auto-open paywall when user lands with 0 credits and tries to interact (web only).
   useEffect(() => {
-    if (noCredits && selectedImage) {
+    if (!native && noCredits && selectedImage) {
       setPricingOpen(true);
     }
-  }, [noCredits, selectedImage]);
+  }, [native, noCredits, selectedImage]);
 
   const requireAuth = (): boolean => {
     if (!user) {
@@ -73,10 +77,21 @@ const Index = () => {
     return true;
   };
 
+  const handleOutOfCredits = () => {
+    if (native) {
+      toast({
+        title: "You're out of GIF credits",
+        description: "Manage your account on gifspark.app",
+      });
+    } else {
+      setPricingOpen(true);
+    }
+  };
+
   const handleImageSelect = (file: File) => {
     if (!requireAuth()) return;
     if (noCredits) {
-      setPricingOpen(true);
+      handleOutOfCredits();
       return;
     }
     setSelectedImage(file);
@@ -92,7 +107,7 @@ const Index = () => {
   const handleGenerate = () => {
     if (!requireAuth()) return;
     if (noCredits) {
-      setPricingOpen(true);
+      handleOutOfCredits();
       return;
     }
     if (!selectedImage) {
@@ -132,7 +147,7 @@ const Index = () => {
         <div className="relative z-10 flex-1">
           <Header
             onRequireSignIn={() => setSignInOpen(true)}
-            onBuyCredits={() => setPricingOpen(true)}
+            onBuyCredits={native ? undefined : () => setPricingOpen(true)}
           />
           <main className="container max-w-4xl mx-auto px-4 sm:px-6 pb-16">
             <ResultView
@@ -142,7 +157,7 @@ const Index = () => {
             />
           </main>
         </div>
-        {pricingOpen && (
+        {!native && pricingOpen && (
           <Suspense fallback={null}>
             <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
           </Suspense>
@@ -159,7 +174,7 @@ const Index = () => {
       <div className="relative z-10">
         <Header
           onRequireSignIn={() => setSignInOpen(true)}
-          onBuyCredits={() => setPricingOpen(true)}
+          onBuyCredits={native ? undefined : () => setPricingOpen(true)}
         />
 
         <main className="container max-w-2xl mx-auto px-4 sm:px-6 pb-16">
@@ -259,17 +274,36 @@ const Index = () => {
             {noCredits && (
               <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 text-sm text-foreground text-center space-y-2">
                 <p className="font-medium">You're out of credits</p>
-                <p className="text-muted-foreground text-xs">
-                  Buy more to keep creating animated GIF greetings.
-                </p>
-                <Button
-                  size="sm"
-                  onClick={() => setPricingOpen(true)}
-                  className="gap-1.5"
-                >
-                  <ShoppingCart className="h-3.5 w-3.5" />
-                  Buy GIF credits
-                </Button>
+                {native ? (
+                  <>
+                    <p className="text-muted-foreground text-xs">
+                      Manage your account on the GifSpark website.
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openExternal(WEB_APP_URL)}
+                      className="gap-1.5"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Manage on gifspark.app
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-muted-foreground text-xs">
+                      Buy more to keep creating animated GIF greetings.
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => setPricingOpen(true)}
+                      className="gap-1.5"
+                    >
+                      <ShoppingCart className="h-3.5 w-3.5" />
+                      Buy GIF credits
+                    </Button>
+                  </>
+                )}
               </div>
             )}
 
@@ -281,7 +315,7 @@ const Index = () => {
           </div>
 
           <GenerationHistory onSelect={(gen) => setResult(gen)} />
-          <PurchaseHistory />
+          {!native && <PurchaseHistory />}
         </main>
         <Footer />
       </div>
@@ -291,7 +325,7 @@ const Index = () => {
       )}
 
       <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
-      {pricingOpen && (
+      {!native && pricingOpen && (
         <Suspense fallback={null}>
           <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
         </Suspense>

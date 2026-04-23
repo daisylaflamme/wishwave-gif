@@ -12,9 +12,9 @@ export function Header({ onRequireSignIn, onBuyCredits }: HeaderProps) {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="w-full px-4 sm:px-6 pt-5 pb-8 sm:pb-12">
+    <header className="w-full px-4 sm:px-6 pt-safe pb-8 sm:pb-12">
       {/* Top bar: logo left, user controls right */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-8 sm:mb-12 min-h-[2.25rem]">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-8 sm:mb-12 min-h-[2.75rem] pt-3">
         <div className="flex items-center" aria-hidden="true" />
 
         <div className="flex flex-wrap items-center justify-end gap-2">

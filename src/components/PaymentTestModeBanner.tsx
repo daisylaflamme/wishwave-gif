@@ -1,6 +1,10 @@
+import { isNativeApp } from "@/lib/platform";
+
 const clientToken = import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string | undefined;
 
 export function PaymentTestModeBanner() {
+  // Hide all payment UI inside the native mobile app.
+  if (isNativeApp()) return null;
   if (!clientToken?.startsWith("pk_test_")) return null;
   return (
     <div className="w-full bg-orange-100 border-b border-orange-300 px-4 py-2 text-center text-sm text-orange-800">

@@ -3,6 +3,7 @@ import { Download, RotateCcw, Loader2, Sparkles, Link as LinkIcon, Mail, Message
 import { Button } from "@/components/ui/button";
 import { createGif } from "@/lib/createGif";
 import { toast } from "sonner";
+import { isNativeApp, nativeShare, openExternal, saveToDevice } from "@/lib/platform";
 
 interface ResultViewProps {
   videoUrl: string;
@@ -93,8 +94,21 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
     URL.revokeObjectURL(url);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!gifBlob) return;
+    if (isNativeApp()) {
+      const uri = await saveToDevice(gifBlob, filename);
+      if (uri) {
+        toast.success("Saved to Files", {
+          description: "Tap Share to send your GIF anywhere.",
+          action: { label: "Share", onClick: () => handleNativeShare() },
+        });
+        return;
+      }
+      // Fall back to native share if filesystem write failed.
+      await handleNativeShare();
+      return;
+    }
     downloadBlob(gifBlob, filename);
   };
 
@@ -110,6 +124,10 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
   };
 
   const openShare = (url: string) => {
+    if (isNativeApp()) {
+      openExternal(url);
+      return;
+    }
     window.open(url, "_blank", "noopener,noreferrer,width=600,height=600");
   };
 
@@ -117,16 +135,38 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
   const handleFacebook = () => openShare(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`);
   const handleX = () => openShare(`https://twitter.com/intent/tweet?text=${encodeURIComponent(SHARE_TEXT)}&url=${encodeURIComponent(shareUrl)}`);
   const handleEmail = () => {
-    window.location.href = `mailto:?subject=${encodeURIComponent("My GifSpark GIF")}&body=${encodeURIComponent(`${SHARE_TEXT}\n\n${shareUrl}`)}`;
+    const mailto = `mailto:?subject=${encodeURIComponent("My GifSpark GIF")}&body=${encodeURIComponent(`${SHARE_TEXT}\n\n${shareUrl}`)}`;
+    if (isNativeApp()) {
+      openExternal(mailto);
+    } else {
+      window.location.href = mailto;
+    }
   };
-  const handleInstagram = () => {
-    if (gifBlob) downloadBlob(gifBlob, filename);
+  const handleInstagram = async () => {
+    if (gifBlob) {
+      if (isNativeApp()) {
+        await saveToDevice(gifBlob, filename);
+      } else {
+        downloadBlob(gifBlob, filename);
+      }
+    }
     toast("Saved! Now upload it to Instagram", {
       description: "Instagram doesn't support direct sharing — open the app and post your GIF.",
     });
   };
   const handleNativeShare = async () => {
     if (!gifBlob) return;
+    // Capacitor native share path
+    if (isNativeApp()) {
+      const ok = await nativeShare({
+        blob: gifBlob,
+        filename,
+        title: "GifSpark GIF",
+        text: SHARE_TEXT,
+      });
+      if (!ok) await handleCopyLink();
+      return;
+    }
     try {
       const file = new File([gifBlob], filename, { type: "image/gif" });
       if (navigator.canShare?.({ files: [file] })) {
@@ -136,11 +176,12 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
       } else {
         await handleCopyLink();
       }
-    } catch (e) {
+    } catch {
       // user dismissed — silent
     }
   };
-  const canNativeShare = typeof navigator !== "undefined" && "share" in navigator;
+  const canNativeShare =
+    isNativeApp() || (typeof navigator !== "undefined" && "share" in navigator);
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
