@@ -59,7 +59,7 @@ serve(async (req) => {
         return ok();
       }
 
-      const { data: ok, error } = await supabase.rpc("add_credits_from_purchase", {
+      const { data: applied, error } = await supabase.rpc("add_credits_from_purchase", {
         _user_id: userId,
         _stripe_session_id: session.id,
         _stripe_event_id: event.id,
@@ -76,7 +76,7 @@ serve(async (req) => {
         console.error("add_credits_from_purchase failed:", error);
         return new Response("DB error", { status: 500 });
       }
-      console.log("Credits added:", { userId, credits: pkg.credits, applied: ok });
+      console.log("Credits added:", { userId, credits: pkg.credits, applied });
     } else {
       console.log("Unhandled event:", event.type);
     }
