@@ -1,142 +1,127 @@
 
+# Media Export Refactor — MP4 Primary, WebP Secondary, GIF Optional
 
-# GifSpark — Mobile App Wrapper Prep (Capacitor)
+Reuse the single Runway MP4 (already persisted in Supabase as of last refactor) as the source of truth. Add WebP as a smaller animated alternative. Keep GIF behind an opt-in toggle. No more eager browser GIF encoding on mount — that's the main mobile pain point today.
 
-Prepare GifSpark to be wrapped as a native iOS + Android app using Capacitor, with payments fully removed from the mobile experience.
+## 1. Backend (no new edge function for now)
 
-## 1. Add a mobile-mode flag
+The MP4 is already stored in `wishwave-generated/{userId}/{generationId}.mp4` via `runway-poll`. Nothing changes on the backend in this pass.
 
-A single source of truth for "am I running inside the mobile app?" so the web build is unaffected.
+**Why no server-side WebP/GIF**: Deno Deploy edge functions can't run native ffmpeg, and we already decided (last round) to defer Cloudinary/etc. Browser-side encoding is fine — it just needs to be **on-demand** (only when the user clicks the button), not automatic on every result view.
 
-- Detect Capacitor at runtime via `window.Capacitor?.isNativePlatform?.()`.
-- Expose `isNativeApp()` from `src/lib/platform.ts`.
-- Web build: behaves exactly as today (payments visible).
-- Mobile build: payments hidden, native integrations enabled.
+## 2. Frontend: new `src/lib/createWebp.ts`
 
-## 2. Remove payment surfaces in mobile mode
+Animated WebP encoder using the existing Canvas+video frame-extraction pipeline (the same approach `createGif.ts` uses), but encoding via the modern `webp-wasm` library or the `WebCodecs` `ImageEncoder` where available.
 
-In native mode, hide every checkout entry point and replace with a soft "Manage on web" link.
+- **Primary path**: `WebCodecs` (`VideoDecoder` + `ImageEncoder` with `image/webp`) — available on Chrome/Edge/Opera and recent Safari (17+). Hardware-accelerated, fast on mobile.
+- **Fallback path**: `webp-wasm` package (~200 KB) — pure WASM encoder, works everywhere. Slower than WebCodecs but still ~3–5× faster than gif.js for the same clip and produces files ~5–10× smaller than GIF.
+- Same 512 px max-width downscale, same overlay text rendering as GIF.
+- Returns a `Blob` (`image/webp`).
+- Progress callback identical to `createGif`.
 
-| Surface | Web | Mobile |
+## 3. Frontend: refactor `ResultView.tsx`
+
+### State
+Replace the eager-on-mount `gifBlob` state with three lazy slots:
+
+```ts
+type ExportFormat = "mp4" | "webp" | "gif";
+const [exporting, setExporting] = useState<ExportFormat | null>(null);
+const [exportProgress, setExportProgress] = useState(0);
+const [cache, setCache] = useState<Partial<Record<ExportFormat, Blob>>>({});
+const [errors, setErrors] = useState<Partial<Record<ExportFormat, string>>>({});
+```
+
+Nothing is generated on mount. The MP4 is already a Supabase signed URL — we just play it.
+
+### Preview
+Replace the `<img src={gifUrl}>` preview with a `<video>` element looping the MP4:
+
+```tsx
+<video
+  src={videoUrl}
+  autoPlay loop muted playsInline
+  poster={...optional first-frame...}
+  onLoadedData={() => setVideoReady(true)}
+  onError={() => setVideoError(true)}
+/>
+```
+
+- Loading spinner shown until `onLoadedData`.
+- Error state if the video fails (expired link, network).
+- No memory-heavy canvas work just to show the result.
+
+### Download buttons (new layout)
+
+```
+[ Download MP4 ]   ← primary, solid button, instant (just fetch+save the signed URL)
+[ Download Animated WebP ]   ← outline button, lazy-encodes on click with progress
+[ ⌄ Download as GIF (compatibility) ]   ← small text link / collapsed under "More options"
+```
+
+- **MP4**: fetch the signed URL → blob → save. No encoding. Works on web, native (via `saveToDevice`), and triggers a browser download otherwise. This becomes the default share file too.
+- **WebP**: on click, run `createWebp(videoUrl, recipientMessage, onProgress)`. Cache the blob. Show inline progress on the button (`Encoding WebP… 42%`). On failure, show toast "Couldn't create WebP — your MP4 is still ready to download" and keep MP4/GIF buttons usable.
+- **GIF**: on click, run existing `createGif(...)`. Same caching + progress + isolated error handling. Failure does not affect MP4 or WebP.
+
+### Share section
+Default share file becomes the MP4 (works on iMessage, WhatsApp, X, Discord, Instagram DM). Helper text updated:
+
+> "MP4 works everywhere. Download WebP for smaller file size, or GIF for legacy compatibility (forums, old chat apps)."
+
+The Instagram button switches to "Save MP4, then post to Instagram" (Instagram supports MP4 natively as a Reel/Story — this is actually better than a GIF, which it doesn't accept directly).
+
+### File naming
+- `gifspark-{label}.mp4`
+- `gifspark-{label}.webp`
+- `gifspark-{label}.gif`
+
+## 4. Performance & memory wins
+
+- **No work on mount** — opening a result no longer kicks off a 50-frame canvas loop. Mobile result page becomes instant.
+- **MP4 download is zero-encode** — fetch signed URL, save. ~1 second on mobile vs the current 10–30 s GIF encode.
+- **WebP via WebCodecs** uses hardware decode/encode where available, way lighter on RAM than gif.js.
+- **GIF only runs if explicitly requested** — most users will pick MP4 or WebP and never trigger gif.js.
+- Each encoder is dynamically imported (`await import(...)`) so the heavy WASM only loads when its button is clicked. Initial JS bundle shrinks.
+
+## 5. Error handling matrix
+
+| Failure | User-visible behavior | Other downloads still work? |
 |---|---|---|
-| `CreditsBadge` "Buy more" button | shown | hidden — badge still shows credit count |
-| `Header` `onBuyCredits` prop | wired | not passed |
-| `Index.tsx` "You're out of credits" CTA | "Buy GIF credits" button | "Buy credits at gifspark.app" link (opens in external browser via `Browser.open`) |
-| `PricingModal` mount | mounted | not mounted, lazy import skipped |
-| `PurchaseHistory` component | shown | hidden |
-| `PaymentTestModeBanner` | shown | hidden |
-| Routes `/payment-success` | active | redirects to `/` |
+| MP4 fetch fails | Toast "Couldn't download — link may have expired" + retry | WebP/GIF unaffected (encode from cached video element if possible, else also fail gracefully) |
+| WebP encode fails | Inline error under WebP button + toast | MP4 + GIF unaffected |
+| GIF encode fails | Inline error under GIF button + toast | MP4 + WebP unaffected |
+| Video preview fails to load | Error card in preview slot, all three download buttons disabled with explanation | — |
 
-`PricingModal.tsx`, Stripe libs, and edge functions stay in the codebase — just unreached on mobile. No business logic deletion.
+All errors logged to console for debugging. Friendly copy in the UI.
 
-## 3. Native shell config
+## 6. Cleanup
 
-New files for the Capacitor wrapper (user runs `npx cap add ios/android` themselves after pulling to GitHub).
-
-- **`capacitor.config.ts`** at project root:
-  - `appId: app.lovable.5f66f100340b4e2486858eadea090d4c`
-  - `appName: gifspark`
-  - `webDir: dist`
-  - `server.url` pointing at the Lovable preview for hot-reload during dev (commented note: remove for production builds)
-  - `ios.contentInset: 'always'`, `backgroundColor` matching brand
-- **Plugins to install** (declared in package.json, user installs after pulling):
-  - `@capacitor/core`, `@capacitor/cli`
-  - `@capacitor/ios`, `@capacitor/android`
-  - `@capacitor/share` — native share sheet
-  - `@capacitor/filesystem` — save GIF to device
-  - `@capacitor/browser` — open external links (purchase page, legal links)
-  - `@capacitor/app` — back-button handling, deep links
-  - `@capacitor/status-bar` + `@capacitor/splash-screen`
-
-## 4. Mobile UX fixes in the existing app
-
-These ship in both web and mobile builds — they're improvements, not mobile-only.
-
-### Safe-area & viewport (`index.html` + `index.css`)
-- Add `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />`
-- Add `safe-area-inset-*` utilities; apply `pt-safe`/`pb-safe` to `Header` top bar and `SupportChatButton` floating position.
-- Lock `body` against rubber-band overscroll on iOS: `overscroll-behavior-y: none`.
-- Disable text selection on UI chrome (`user-select: none` on buttons/headers); keep it on inputs and the result message.
-
-### Touch targets & states
-- Audit all `<button>` and icon buttons for min 44×44 hit area (the `Header` sign-out icon, `ResultView` share icons, `ImageUpload` clear `X`).
-- Replace any `hover:`-only feedback with `active:` equivalents on touch devices via `@media (hover: none)`.
-- Add `touch-action: manipulation` to all buttons to kill the 300ms double-tap delay.
-
-### Upload flow on mobile
-- `ImageUpload`: replace the dynamic `<input>` creation with a persistent hidden `<input type="file" accept="image/*" capture="environment">` so iOS shows the proper "Photo Library / Take Photo" sheet.
-- Validate file size (10 MB cap) with a clear toast — mobile photos are huge.
-- Add an explicit "Take Photo" path on native using `@capacitor/camera` (graceful fallback to file input).
-
-### Result/share flow on mobile
-- `ResultView`: route share through Capacitor `Share.share({ files: [...] })` when `isNativeApp()`, falling back to existing `navigator.share`/popup logic on web.
-- "Download GIF" on native: write blob via `Filesystem.writeFile` to `Documents/`, then surface a toast "Saved to Files" with a "Share" button. Web behavior unchanged.
-- WhatsApp/Facebook/X/Email buttons: open via `Browser.open` on native (avoids broken `window.open` popups in WebView).
-
-### Modals & scrolling
-- `PricingModal`/`SignInDialog`/`SupportChatPanel`: ensure `max-h-[90vh]` accounts for safe-area; switch to `Drawer` on small screens (already partially done for sheets — audit and confirm).
-- Set `-webkit-overflow-scrolling: touch` on all scroll areas.
-
-### Loading/error/empty states pass
-- Confirm `ProgressOverlay` covers the full safe area.
-- `GenerationHistory` empty state copy + skeleton.
-- Network error toasts with retry buttons in `useGeneration`.
-
-## 5. Routing & external links
-
-- Wrap the router so back-button on Android calls `App.exitApp()` only when on `/` (use `@capacitor/app` listener).
-- All `<a target="_blank">` (Footer "Powered by Runway", Legal external links): intercept on native and route through `Browser.open()`.
-- `/auth` and `/payment-success`: on native, `/payment-success` redirects to `/`; `/auth` is allowed (sign-in still works in-app).
-
-## 6. OAuth on native
-
-Google sign-in via Supabase needs a deep-link callback on native:
-- Add `redirectTo: nativeRedirect` in `useAuth.signInWithOAuth` — `app.lovable.5f66f100340b4e2486858eadea090d4c://auth-callback` on native, normal URL on web.
-- Listen for `appUrlOpen` and forward to Supabase `getSessionFromUrl`.
-- Document in README that user must add this URL scheme to Supabase Auth → URL Configuration → Redirect URLs.
+- `useGeneration.ts`: no changes (it already returns `videoUrl` only).
+- `createGif.ts`: stays as-is — it's now lazy-loaded.
+- Tests: existing example test untouched.
 
 ## 7. Files touched
 
 **New**
-- `src/lib/platform.ts` — `isNativeApp()`, `openExternal()`, `nativeShare()`, `saveToDevice()`
-- `capacitor.config.ts`
-- Memory file `mem://technical/mobile-wrapper`
+- `src/lib/createWebp.ts` — WebCodecs primary, webp-wasm fallback, same API shape as `createGif`.
 
 **Edited**
-- `index.html` — viewport-fit=cover, mobile meta tags
-- `src/index.css` — safe-area utilities, touch optimizations, hover-media guards
-- `src/App.tsx` — guard `/payment-success` route on native; back-button handler
-- `src/pages/Index.tsx` — hide pricing + purchase history on native; replace out-of-credits CTA
-- `src/components/Header.tsx` — conditional `onBuyCredits`, safe-area padding
-- `src/components/CreditsBadge.tsx` — hide "Buy more" on native
-- `src/components/PaymentTestModeBanner.tsx` — return null on native
-- `src/components/ImageUpload.tsx` — persistent file input, size validation, capture attr
-- `src/components/ResultView.tsx` — native share + filesystem save paths
-- `src/components/Footer.tsx` — external links via `openExternal`
-- `src/components/support/SupportChatButton.tsx` — safe-area-aware positioning
-- `src/hooks/useAuth.tsx` — native OAuth redirect handling
-- `package.json` — Capacitor deps
+- `src/components/ResultView.tsx` — full restructure: lazy encoding, MP4-first, three download buttons, video preview, isolated error states.
+- `package.json` — add `@jsquash/webp` (or `webp-wasm`) as the WebP fallback encoder.
 
-## 8. Mobile QA checklist (delivered with the work)
+**Unchanged but related**
+- `src/lib/createGif.ts` — kept for the optional GIF button.
+- `supabase/functions/runway-poll/index.ts` — already stores MP4 in Supabase; no change.
 
-A printable checklist in chat covering: launch, sign-in (email + Google), sign-out, upload from library, upload via camera, preview persistence on back-nav, motion select, generate, retry on failure, preview, native share, save to Files, copy link, delete from history, no payment UI visible, external links open in system browser, safe-area on iPhone notch + Android gesture bar, landscape on tablet, no clipped modals, no hover-stuck buttons.
+## 8. Mobile-specific notes
 
-## 9. Next steps after this work (handed to you)
+- `<video playsInline muted autoPlay loop>` is the iOS-safe pattern — confirmed.
+- WebCodecs is supported on iOS Safari 17+; older iOS falls through to `@jsquash/webp` WASM (still way lighter than gif.js).
+- On Capacitor native, `Share.share({ files: [mp4Uri] })` works natively for MP4 — better UX than the current GIF-share flow.
 
-1. Click "Export to GitHub" in Lovable, then `git clone` your repo locally.
-2. `npm install`
-3. `npx cap add ios` and/or `npx cap add android`
-4. `npm run build && npx cap sync`
-5. iOS: `npx cap open ios` → run in Xcode on simulator/device. Requires Mac + Xcode 15+, an Apple Developer account ($99/yr) for App Store submission.
-6. Android: `npx cap open android` → run in Android Studio. Requires a Google Play Developer account ($25 one-time) for Play Store submission.
-7. In Supabase dashboard → Auth → URL Configuration: add `app.lovable.5f66f100340b4e2486858eadea090d4c://auth-callback` to redirect URLs.
-8. Before submission: create app icons + splash screens (`@capacitor/assets`), write store listing copy, capture screenshots, complete iOS privacy labels (camera, photo library) and Android permissions disclosure.
-9. Re-run `npx cap sync` after every Lovable pull.
+## 9. Out of scope (explicit)
 
-## 10. Remaining risks
-
-- **ffmpeg.wasm in WebView**: GIF encoding loads ~30 MB of WASM; needs testing on low-end Android. Fallback plan: server-side encoding if perf is bad.
-- **iOS WebView memory**: large photos + ffmpeg may crash on older iPhones. Mitigation: 10 MB upload cap + downscale before encoding.
-- **App Store payment policy**: even with all checkout removed, Apple may flag external "Buy on website" links under Reader app rules. Acceptable approach: keep the link generic ("Manage account on gifspark.app") without "Buy" wording if rejected.
-- **Hot-reload via `server.url`** must be removed from `capacitor.config.ts` before production builds, otherwise the app will load from the Lovable preview instead of bundled assets.
+- No server-side WebP/GIF encoding (decided last round — re-evaluate later with Cloudinary if mobile encoding is still slow).
+- No changes to Stripe, motion selection, upload flow, history grid, or auth.
+- No design system changes — same buttons, same brand colors, same layout shell.
 
