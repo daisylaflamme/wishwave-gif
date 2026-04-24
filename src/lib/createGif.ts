@@ -9,9 +9,14 @@ const TOTAL_FRAMES = GIF_DURATION_SECONDS * GIF_FPS; // 50
 const MAX_WIDTH = 512;
 
 async function fetchVideoBlob(videoUrl: string): Promise<string> {
-  const proxyResponse = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/video-proxy`,
-    {
+  // Supabase signed URLs and same-origin URLs can be fetched directly.
+  // Legacy Runway CDN URLs (from old generations) still need the proxy.
+  const isSupabaseUrl = videoUrl.includes("/storage/v1/object/");
+  const isLegacyRunwayUrl = !isSupabaseUrl;
+
+  let response: Response;
+  if (isLegacyRunwayUrl) {
+    response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/video-proxy`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -19,25 +24,29 @@ async function fetchVideoBlob(videoUrl: string): Promise<string> {
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
       body: JSON.stringify({ url: videoUrl }),
-    }
-  );
+    });
+  } else {
+    response = await fetch(videoUrl);
+  }
 
-  if (!proxyResponse.ok) {
-    let message = `Failed to fetch video: ${proxyResponse.status}`;
+  if (!response.ok) {
+    let message = `Failed to fetch video: ${response.status}`;
     try {
-      const data = await proxyResponse.json();
-      if (data?.expired || proxyResponse.status === 410) {
+      const data = await response.clone().json();
+      if (data?.expired || response.status === 410) {
         message = "This video link has expired. Please regenerate the GIF from a fresh creation.";
       } else if (data?.error) {
         message = data.error;
       }
     } catch {
-      // ignore
+      if (response.status === 401 || response.status === 403 || response.status === 410) {
+        message = "This video link has expired. Please regenerate the GIF from a fresh creation.";
+      }
     }
     throw new Error(message);
   }
 
-  const blob = await proxyResponse.blob();
+  const blob = await response.blob();
   return URL.createObjectURL(blob);
 }
 
