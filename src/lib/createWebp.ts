@@ -321,7 +321,7 @@ export async function createWebp(
     const out = buildAnimatedWebp(width, height, frames);
     onProgress?.(100);
 
-    return new Blob([out], { type: "image/webp" });
+    return new Blob([out.buffer as ArrayBuffer], { type: "image/webp" });
   } finally {
     URL.revokeObjectURL(localUrl);
   }
