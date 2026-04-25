@@ -35,6 +35,24 @@ export const MOTION_STYLES = [
     icon: '😄',
     description: 'A genuine happy laugh',
   },
+  {
+    id: 'wink' as const,
+    label: 'Wink',
+    icon: '😉',
+    description: 'A subtle wink and smile',
+  },
+  {
+    id: 'clap' as const,
+    label: 'Clap',
+    icon: '👏',
+    description: 'A small realistic clap',
+  },
+  {
+    id: 'nod' as const,
+    label: 'Nod',
+    icon: '🙂',
+    description: 'A gentle head nod',
+  },
 ] as const;
 
 export type MotionStyle = typeof MOTION_STYLES[number]['id'];
