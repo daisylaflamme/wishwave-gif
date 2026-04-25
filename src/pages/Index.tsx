@@ -292,7 +292,7 @@ const Index = () => {
                 ) : (
                   <>
                     <p className="text-muted-foreground text-xs">
-                      Buy more to keep creating animated GIF greetings.
+                      Buy more to keep creating animated photos and short videos.
                     </p>
                     <Button
                       size="sm"
@@ -300,7 +300,7 @@ const Index = () => {
                       className="gap-1.5"
                     >
                       <ShoppingCart className="h-3.5 w-3.5" />
-                      Buy GIF credits
+                      Buy credits
                     </Button>
                   </>
                 )}
