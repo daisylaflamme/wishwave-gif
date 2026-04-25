@@ -188,7 +188,7 @@ const Index = () => {
                 Upload a Photo
               </h2>
               <p className="text-sm text-muted-foreground -mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span>One portrait → a tiny, shareable reaction GIF in seconds.</span>
+                <span>One portrait → an animated photo (short looping video) in seconds.</span>
                 <span className="text-muted-foreground/50">·</span>
                 <GifInfo />
               </p>
