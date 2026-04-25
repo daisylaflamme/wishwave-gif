@@ -11,7 +11,7 @@ const RUNWAY_PROMPT_MAX = 1000;
 
 // Shared identity/camera/scene constraints prepended to every prompt.
 const PROMPT_BASE =
-  "Animate ONLY the person(s) in the image. Preserve facial identity, features, skin, hair, clothing exactly — no morphing or face swap. Camera fully stable: no zoom, pan, crop, or reframing. Keep composition, proportions, and background unchanged. Do NOT add people, objects, or extend the frame. Hands and limbs must stay anatomically correct (no extra fingers, no warping). Subtle, smooth, social-media-friendly motion contained in the original frame. Smooth 5-second seamless loop.";
+  "Animate ONLY the people already present in the uploaded image. Preserve facial identity, features, skin, hair, clothing exactly — no morphing or face swap. NEVER generate new faces, new people, duplicate people, or background characters. Camera fully stable: no zoom, pan, crop, or reframing. Keep composition, proportions, and background unchanged. Do NOT extend the frame. Hands and limbs anatomically correct (no extra fingers, no warping). Subtle, smooth, social-media-friendly motion contained in the original frame. Smooth 5-second seamless loop.";
 
 const MOUTH_CLOSED = "Mouth stays closed and still — NOT talking, no lip movement forming words.";
 
