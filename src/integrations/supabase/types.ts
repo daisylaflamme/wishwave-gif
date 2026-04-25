@@ -155,6 +155,7 @@ export type Database = {
         Returns: boolean
       }
       consume_credit: { Args: { _user_id: string }; Returns: boolean }
+      refund_credit: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
