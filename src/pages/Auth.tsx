@@ -42,7 +42,7 @@ export default function Auth() {
         <div className="space-y-2">
           <h2 className="text-lg font-semibold text-foreground">Sign in to continue</h2>
           <p className="text-sm text-muted-foreground">
-            Sign in to create animated GIF greetings from your photos.
+            Sign in to turn your photos into animated photos and short videos.
           </p>
         </div>
         <Button size="lg" className="w-full h-12 rounded-xl" onClick={handleGoogle}>
