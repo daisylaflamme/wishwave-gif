@@ -80,7 +80,7 @@ const Index = () => {
   const handleOutOfCredits = () => {
     if (native) {
       toast({
-        title: "You're out of GIF credits",
+        title: "You're out of credits",
         description: "Manage your account on gifspark.app",
       });
     } else {
@@ -188,7 +188,7 @@ const Index = () => {
                 Upload a Photo
               </h2>
               <p className="text-sm text-muted-foreground -mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span>One portrait → a tiny, shareable reaction GIF in seconds.</span>
+                <span>One portrait → an animated photo (short looping video) in seconds.</span>
                 <span className="text-muted-foreground/50">·</span>
                 <GifInfo />
               </p>
@@ -260,13 +260,13 @@ const Index = () => {
                 disabled={status !== "idle" || (!!user && !selectedImage) || noCredits || (!!selectedImage && !consent)}
               >
                 <Wand2 className="h-5 w-5" />
-                Generate GIF
+                Animate Photo
               </Button>
               {user && (
                 <p className="text-xs text-center text-muted-foreground">
                   {noCredits
-                    ? "You're out of GIF credits."
-                    : `${credits} ${credits === 1 ? "GIF" : "GIFs"} remaining (1 credit per GIF)`}
+                    ? "You're out of animation credits."
+                    : `${credits} ${credits === 1 ? "animation" : "animations"} remaining (1 credit per animated photo)`}
                 </p>
               )}
             </div>
@@ -292,7 +292,7 @@ const Index = () => {
                 ) : (
                   <>
                     <p className="text-muted-foreground text-xs">
-                      Buy more to keep creating animated GIF greetings.
+                      Buy more to keep creating animated photos and short videos.
                     </p>
                     <Button
                       size="sm"
@@ -300,7 +300,7 @@ const Index = () => {
                       className="gap-1.5"
                     >
                       <ShoppingCart className="h-3.5 w-3.5" />
-                      Buy GIF credits
+                      Buy credits
                     </Button>
                   </>
                 )}

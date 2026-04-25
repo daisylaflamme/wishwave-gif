@@ -51,8 +51,8 @@ export function Header({ onRequireSignIn, onBuyCredits }: HeaderProps) {
         </div>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed px-4">
           Turn one portrait into a{" "}
-          <span className="text-foreground font-medium">tiny, shareable reaction GIF</span>{" "}
-          in seconds.
+          <span className="text-foreground font-medium">shareable animated photo</span>{" "}
+          — a short looping video you can send anywhere, in seconds.
         </p>
       </div>
     </header>
