@@ -260,13 +260,13 @@ const Index = () => {
                 disabled={status !== "idle" || (!!user && !selectedImage) || noCredits || (!!selectedImage && !consent)}
               >
                 <Wand2 className="h-5 w-5" />
-                Generate GIF
+                Animate Photo
               </Button>
               {user && (
                 <p className="text-xs text-center text-muted-foreground">
                   {noCredits
-                    ? "You're out of GIF credits."
-                    : `${credits} ${credits === 1 ? "GIF" : "GIFs"} remaining (1 credit per GIF)`}
+                    ? "You're out of animation credits."
+                    : `${credits} ${credits === 1 ? "animation" : "animations"} remaining (1 credit per animated photo)`}
                 </p>
               )}
             </div>
