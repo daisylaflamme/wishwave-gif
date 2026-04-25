@@ -315,6 +315,17 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
             </p>
           </div>
         )}
+
+        {videoReady && !videoError && recipientMessage?.trim() && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-center px-4 pb-4 pt-10 bg-gradient-to-t from-black/65 via-black/25 to-transparent">
+            <p
+              className="text-center font-bold text-white text-lg sm:text-xl leading-tight tracking-tight break-words max-w-full"
+              style={{ textShadow: "0 2px 8px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.8)" }}
+            >
+              {recipientMessage.trim()}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Download buttons */}
