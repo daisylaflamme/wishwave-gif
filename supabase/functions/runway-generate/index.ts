@@ -125,15 +125,21 @@ serve(async (req) => {
       const errorText = await response.text();
       console.error("Runway API error:", response.status, errorText);
 
-      const lowered = errorText.toLowerCase();
-      const userMessage = lowered.includes("credit")
-        ? "Video generation requires Runway credits. Please add credits or try again later."
-        : "Video generation failed. Please try again with a different photo.";
+      // Refund the credit since generation didn't actually happen
+      const { error: refundErr } = await serviceClient.rpc("refund_credit", { _user_id: userId });
+      if (refundErr) console.error("refund_credit error:", refundErr);
 
-      return new Response(JSON.stringify({ error: userMessage }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      const lowered = errorText.toLowerCase();
+      const isProviderOutOfCredits = lowered.includes("credit");
+      const userMessage = isProviderOutOfCredits
+        ? "Our animation service is temporarily unavailable. Your credit has been refunded — please try again shortly."
+        : "Video generation failed. Your credit has been refunded — please try again with a different photo.";
+
+      // Return 200 with structured error so the frontend doesn't treat it as a runtime crash
+      return new Response(
+        JSON.stringify({ error: userMessage, refunded: true, providerUnavailable: isProviderOutOfCredits }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     const data = await response.json();
