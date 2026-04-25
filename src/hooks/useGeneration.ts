@@ -75,6 +75,10 @@ export function useGeneration() {
         });
 
         if (videoResponse.error) throw new Error(`Video generation failed: ${videoResponse.error.message}`);
+        if (videoResponse.data?.error) {
+          queryClient.invalidateQueries({ queryKey: ["user_credits"] });
+          throw new Error(videoResponse.data.error);
+        }
 
         const { jobId } = videoResponse.data;
 
