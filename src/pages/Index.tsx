@@ -80,7 +80,7 @@ const Index = () => {
   const handleOutOfCredits = () => {
     if (native) {
       toast({
-        title: "You're out of GIF credits",
+        title: "You're out of credits",
         description: "Manage your account on gifspark.app",
       });
     } else {
