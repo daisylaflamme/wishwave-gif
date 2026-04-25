@@ -54,7 +54,7 @@ const MOTION_CONFIG: Record<string, MotionConfig> = {
     mouthClosed: false,
   },
   wink: {
-    action: "ACTION: Subtle natural single-eye wink — one eye gently closes and reopens once, paired with a soft warm closed-mouth smile and a tiny head tilt. Other eye stays open and natural.",
+    action: "ACTION: The person gives a quick natural wink with one eye only, while the other eye remains open, with a soft smile. Only ONE eye closes briefly and reopens — the other eye MUST stay fully open the entire time. This is NOT a blink and NOT both eyes closing. Pair with a soft warm closed-mouth smile and a tiny head tilt.",
     multi: PRIMARY_FACE_ONLY,
     mouthClosed: true,
   },

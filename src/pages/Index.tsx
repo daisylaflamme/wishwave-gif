@@ -209,16 +209,35 @@ const Index = () => {
                 Customize
               </h2>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Short Message <span className="text-muted-foreground">(optional)</span>
+              <div className="space-y-1.5 max-w-xs">
+                <label className="text-sm font-medium text-foreground flex items-center justify-between gap-2">
+                  <span>
+                    Short Message <span className="text-muted-foreground">(optional)</span>
+                  </span>
+                  <span
+                    className={`text-[11px] tabular-nums ${
+                      recipientMessage.length > 60
+                        ? recipientMessage.length >= 80
+                          ? "text-destructive"
+                          : "text-amber-600 dark:text-amber-400"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {recipientMessage.length}/80
+                  </span>
                 </label>
                 <Input
                   placeholder="Add a message (e.g., Happy Birthday!)"
                   value={recipientMessage}
-                  onChange={(e) => setRecipientMessage(e.target.value)}
-                  className="max-w-xs"
+                  onChange={(e) => setRecipientMessage(e.target.value.slice(0, 80))}
+                  maxLength={80}
+                  aria-describedby="message-help"
                 />
+                <p id="message-help" className="text-[11px] text-muted-foreground">
+                  {recipientMessage.length >= 80
+                    ? "Maximum 80 characters reached."
+                    : "Keep it short — appears as an overlay on your animation (max 80 chars)."}
+                </p>
               </div>
 
               <StyleSelector
