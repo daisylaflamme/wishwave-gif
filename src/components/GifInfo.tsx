@@ -73,26 +73,26 @@ export function GifInfo({ variant = "link" }: GifInfoProps) {
           type="button"
           className="text-xs font-medium text-primary underline underline-offset-2 decoration-primary/60 hover:decoration-primary hover:text-primary/80 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
         >
-          What is a GIF?
+          What's an animated photo?
         </button>
       </DialogTrigger>
       <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="text-left">
-          <DialogTitle className="text-base sm:text-lg">Photo → Animated GIF</DialogTitle>
+          <DialogTitle className="text-base sm:text-lg">Photo → Animated Photo</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
-            A 5-second looping animation made from your photo — silent, lightweight,
-            and easy to share on iMessage, WhatsApp, email, or social.
+            A 5-second looping short video made from your photo — easy to share on
+            iMessage, WhatsApp, email, or social. Download as MP4, animated WebP, or GIF.
           </DialogDescription>
         </DialogHeader>
         <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-muted-foreground">
           <li className="rounded-md bg-muted/50 px-3 py-2">
-            <span className="font-medium text-foreground">5-sec loop</span> — plays on repeat
+            <span className="font-medium text-foreground">5-sec loop</span> — short video that plays on repeat
           </li>
           <li className="rounded-md bg-muted/50 px-3 py-2">
             <span className="font-medium text-foreground">Tiny file</span> — sends instantly
           </li>
           <li className="rounded-md bg-muted/50 px-3 py-2">
-            <span className="font-medium text-foreground">Works everywhere</span> — no app needed
+            <span className="font-medium text-foreground">Works everywhere</span> — MP4, WebP, or GIF
           </li>
         </ul>
         {open && (
