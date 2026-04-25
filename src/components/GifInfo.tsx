@@ -104,8 +104,8 @@ export function GifInfo({ variant = "link" }: GifInfoProps) {
             />
             <PreviewImage
               src={exampleAfter}
-              alt="Animated GIF greeting result"
-              caption="After — animated GIF"
+              alt="Animated photo result — short looping video"
+              caption="After — animated photo"
             />
           </div>
         )}
