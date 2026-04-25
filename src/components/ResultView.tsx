@@ -148,16 +148,33 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
       setCache((prev) => ({ ...prev, [format]: blob }));
       return blob;
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : `Couldn't prepare ${format.toUpperCase()}. Try again.`;
+      // Always log the raw technical error for debugging.
       console.error(`${format} export failed:`, err);
-      setErrors((prev) => ({ ...prev, [format]: message }));
-      // User-friendly toast clarifying that other formats remain available.
+
+      const rawMessage = err instanceof Error ? err.message : String(err);
+      const isWasmError =
+        /WebAssembly|wasm|CompileError|magic word|Aborted\(/i.test(rawMessage);
+
+      // Map technical errors to clean, user-friendly messages.
+      let friendlyMessage: string;
+      if (format === "webp" && isWasmError) {
+        friendlyMessage = "Animated WebP is temporarily unavailable. MP4 download is recommended.";
+      } else if (format === "gif" && isWasmError) {
+        friendlyMessage = "GIF export is temporarily unavailable. MP4 download is recommended.";
+      } else if (format === "mp4") {
+        friendlyMessage = rawMessage.startsWith("Couldn't") || rawMessage.startsWith("This video")
+          ? rawMessage
+          : "Couldn't prepare MP4. Please try again.";
+      } else {
+        friendlyMessage = `Couldn't prepare ${format.toUpperCase()}. Your MP4 download is still available.`;
+      }
+
+      setErrors((prev) => ({ ...prev, [format]: friendlyMessage }));
       const others =
         format === "mp4"
           ? "You can still try WebP or GIF below."
-          : `Your MP4 download is still available.`;
-      toast.error(message, { description: others });
+          : "Your MP4 download is still available.";
+      toast.error(friendlyMessage, { description: others });
       return null;
     } finally {
       setExporting(null);
