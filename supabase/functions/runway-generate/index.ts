@@ -66,14 +66,14 @@ const MOTION_CONFIG: Record<string, MotionConfig> = {
 
   wink: {
     action:
-      "ACTION: The primary person gives one quick natural wink with only ONE eye closing. The other eye stays fully open the entire time. Do not close both eyes. Do not blink. Keep head stable and add only a soft smile.",
+      "ACTION: Single-eye wink. Only ONE eyelid (left OR right) closes briefly then reopens, while the OTHER eye stays fully open the entire 5 seconds. This is NOT a blink — both eyes must NEVER close together at any frame. Do it once, slowly and clearly. Head stays perfectly still, add only a soft closed-mouth smile. Animate ONLY the existing person already in the photo. Absolutely do NOT generate, add, duplicate, or hallucinate any new people, faces, heads, bodies, or background characters. The number of people in the output MUST equal the number of people in the input.",
     multi: PRIMARY_FACE_ONLY,
     mouthClosed: true,
   },
 
   clap: {
     action:
-      "ACTION: Perform a real clap. Both original hands move toward each other in front of the chest, palms touch, then separate. Repeat 2 times. Hands must visibly meet and separate. No extra hands.",
+      "ACTION: Real two-hand clap. Both of the person's existing hands move toward each other in front of the chest until the palms physically meet and touch with a clear contact, then separate back apart. Repeat this full meet-and-separate clap motion 2 to 3 times across the 5 seconds. The hands MUST visibly come together and touch — do NOT just raise or wave the hands without contact. Keep five fingers per hand, anatomically correct, no extra arms or hands. Soft closed-mouth smile.",
     multi: ALL_PEOPLE,
     mouthClosed: true,
   },
