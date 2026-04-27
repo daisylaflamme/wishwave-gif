@@ -11,60 +11,76 @@ const RUNWAY_PROMPT_MAX = 1000;
 
 // Shared identity/camera/scene constraints prepended to every prompt.
 const PROMPT_BASE =
-  "Animate ONLY the people already present in the uploaded image. Preserve facial identity, features, skin, hair, clothing exactly — no morphing or face swap. NEVER generate new faces, new people, duplicate people, or background characters. Camera fully stable: no zoom, pan, crop, or reframing. Keep composition, proportions, and background unchanged. Do NOT extend the frame. Hands and limbs anatomically correct (no extra fingers, no warping). Subtle, smooth, social-media-friendly motion contained in the original frame. Smooth 5-second seamless loop.";
+  "Animate only the original uploaded photo. Preserve the same person or people, face identity, hair, clothing, body, background, and camera framing. Do not add people, faces, bodies, hands, props, text, or background characters. Do not duplicate anyone. No zoom, crop, pan, or frame extension. Keep motion subtle, realistic, stable, and contained in the original frame.";
 
-const MOUTH_CLOSED = "Mouth stays closed and still — NOT talking, no lip movement forming words.";
+const MOUTH_CLOSED = "Mouth stays closed. No talking, no lip-sync, no words.";
 
-// All-people rule appended for motions that should apply to everyone in frame.
-const ALL_PEOPLE = "If multiple people are present, EVERY person performs the action simultaneously and naturally.";
-// For wink: only the primary face winks if multiple faces are detected.
-const PRIMARY_FACE_ONLY = "If multiple faces are present, ONLY the primary (largest, most centered) face performs the wink; others keep a calm, slightly smiling expression.";
+const ALL_PEOPLE = "If multiple people are visible, only those same original people perform the action naturally.";
 
-// Motion config — easy to extend. `action` is the most important text and is preserved during trimming.
+const PRIMARY_FACE_ONLY =
+  "Only the primary centered face performs the action. Other original people stay still with a calm expression.";
+
 type MotionConfig = { action: string; multi: string; mouthClosed: boolean };
+
 const MOTION_CONFIG: Record<string, MotionConfig> = {
   wave: {
-    action: "ACTION: Person raises one hand to head/shoulder height and clearly waves it side to side 2–3 times. Soft closed-mouth smile.",
+    action:
+      "ACTION: Raise one hand to shoulder height and wave side to side 2 times with a soft smile. Keep body mostly still.",
     multi: ALL_PEOPLE,
     mouthClosed: true,
   },
+
   smile: {
-    action: "ACTION: Subtle, natural, warm smile with minimal facial movement — gentle closed-mouth smile that grows slightly and holds.",
+    action: "ACTION: Create a subtle warm smile that grows slightly and holds. Minimal facial movement only.",
     multi: ALL_PEOPLE,
     mouthClosed: true,
   },
+
   dance: {
-    action: "ACTION: Small playful full-body dance in place to a cheerful rhythm. Hands and arms move naturally and rhythmically (relaxed gestures, light arm sway), AND legs/hips/torso also move — gentle knee bounce, subtle weight shift foot to foot, side-to-side hip sway. Feet stay roughly planted. Light closed-mouth smile.",
+    action:
+      "ACTION: Small playful dance in place. Move arms, hands, shoulders, hips, and legs with a gentle rhythm. Add light knee bounce and side-to-side weight shift. Feet stay near original position.",
     multi: ALL_PEOPLE,
     mouthClosed: true,
   },
+
   thumbs_up: {
-    action: "ACTION: Person raises one hand to chest height and gives a clear, confident thumbs-up gesture, holding it briefly. Friendly closed-mouth smile. The thumbs-up must be clearly visible.",
+    action:
+      "ACTION: Raise one hand to chest height and make a clear thumbs-up gesture. Hold briefly with a friendly smile.",
     multi: ALL_PEOPLE,
     mouthClosed: true,
   },
+
   celebrate: {
-    action: "ACTION: Cheerful celebration — both arms raised upward or outward in a joyful \"yay\" gesture with a happy expression. Smooth and contained within the frame.",
+    action:
+      "ACTION: Joyful celebration gesture. Raise both arms upward or outward in a small happy yay motion. Keep movement inside the frame.",
     multi: ALL_PEOPLE,
     mouthClosed: true,
   },
+
   laugh: {
-    action: "ACTION: Genuine happy laugh — natural smile that widens, light shoulder shake, subtle head movement. Mouth may open slightly as in real laughter, but person is NOT speaking and forms NO words.",
+    action:
+      "ACTION: Natural happy laugh expression. Smile widens, shoulders move slightly, head moves subtly. No speaking or forming words.",
     multi: ALL_PEOPLE,
     mouthClosed: false,
   },
+
   wink: {
-    action: "ACTION: The primary person gives a quick natural wink using only ONE eye while the other eye remains FULLY OPEN the entire time. Not a blink, not both eyes closing. Keep head position stable, add a subtle soft smile only, no exaggerated facial movement. Do NOT create new people, duplicate faces, or alter the background.",
+    action:
+      "ACTION: The primary person gives one quick natural wink with only ONE eye closing. The other eye stays fully open the entire time. Do not close both eyes. Do not blink. Keep head stable and add only a soft smile.",
     multi: PRIMARY_FACE_ONLY,
     mouthClosed: true,
   },
+
   clap: {
-    action: "ACTION: Both hands raised in front of chest performing a small, realistic clap — palms meet smoothly 2–3 times across the 5 seconds. Hands anatomically correct, gentle and contained, friendly closed-mouth smile.",
+    action:
+      "ACTION: Perform a real clap. Both original hands move toward each other in front of the chest, palms touch, then separate. Repeat 2 times. Hands must visibly meet and separate. No extra hands.",
     multi: ALL_PEOPLE,
     mouthClosed: true,
   },
+
   nod: {
-    action: "ACTION: Gentle friendly head nod — head tilts down then back up smoothly 2 times across the 5 seconds, paired with a soft closed-mouth smile. Rest of the body stays still and relaxed.",
+    action:
+      "ACTION: Gentle friendly head nod. Head moves down then back up smoothly 2 times. Body stays relaxed and mostly still.",
     multi: ALL_PEOPLE,
     mouthClosed: true,
   },
@@ -122,10 +138,7 @@ serve(async (req) => {
     const userId = userData.user.id;
 
     // --- Consume one credit (atomic, server-side) ---
-    const serviceClient = createClient(
-      supabaseUrl,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: consumed, error: consumeErr } = await serviceClient.rpc("consume_credit", {
       _user_id: userId,
     });
@@ -137,10 +150,10 @@ serve(async (req) => {
       });
     }
     if (!consumed) {
-      return new Response(
-        JSON.stringify({ error: "You're out of GIF credits. Please buy more to continue." }),
-        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ error: "You're out of GIF credits. Please buy more to continue." }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const RUNWAY_API_KEY = Deno.env.get("RUNWAY_API_KEY");
