@@ -35,24 +35,6 @@ export const MOTION_STYLES = [
     icon: '😄',
     description: 'A genuine happy laugh',
   },
-  {
-    id: 'wink' as const,
-    label: 'Wink',
-    icon: '😉',
-    description: 'A subtle wink and smile',
-  },
-  {
-    id: 'clap' as const,
-    label: 'Clap',
-    icon: '👏',
-    description: 'A small realistic clap',
-  },
-  {
-    id: 'nod' as const,
-    label: 'Nod',
-    icon: '🙂',
-    description: 'A gentle head nod',
-  },
 ] as const;
 
 export type MotionStyle = typeof MOTION_STYLES[number]['id'];
@@ -70,9 +52,6 @@ export const MOTION_PROMPTS: Record<MotionStyle, string> = {
   thumbs_up: `${PROMPT_BASE} ACTION — THUMBS UP: The person raises one hand into frame at chest height and gives a clear, confident thumbs-up gesture, holding it briefly, with a friendly closed-mouth smile. The thumbs-up must be clearly visible and recognizable. ${MOUTH_CLOSED}`,
   celebrate: `${PROMPT_BASE} ACTION — CELEBRATE: The person performs a cheerful celebration — both arms raised upward or outward in a joyful gesture (like a small "yay"), with a happy expression and a closed-mouth or softly smiling face. Slight head tilt is okay. Keep movement smooth and contained within the frame. ${MOUTH_CLOSED}`,
   laugh: `${PROMPT_BASE} ACTION — LAUGH: The person gives a genuine, happy laugh — natural smile that widens, light shoulder shake, subtle head movement. Mouth may open slightly as in real laughter, but the person is NOT speaking and forms NO words; lips do not shape syllables. Expression must look authentic and warm.`,
-  wink: `${PROMPT_BASE} ACTION — WINK: Single-eye wink. Only ONE eyelid (left OR right) closes briefly then reopens while the OTHER eye stays fully open the entire 5 seconds. This is NOT a blink — both eyes must NEVER close together at any frame. Do it once, slowly. Head stays still, soft closed-mouth smile. Animate ONLY the person(s) already in the photo. Do NOT add, duplicate, or hallucinate new people, faces, or background characters. ${MOUTH_CLOSED}`,
-  clap: `${PROMPT_BASE} ACTION — CLAP: Real two-hand clap. Both of the person's existing hands move toward each other in front of the chest until the palms physically meet and touch with clear contact, then separate. Repeat this full meet-and-separate motion 2–3 times across the 5 seconds. Hands MUST visibly come together and touch — do NOT just raise or wave hands. Five fingers per hand, anatomically correct, no extra hands. Soft closed-mouth smile. ${MOUTH_CLOSED}`,
-  nod: `${PROMPT_BASE} ACTION — NOD: The person gives a gentle, friendly head nod — head tilts down then back up smoothly 2 times across the 5 seconds, paired with a soft closed-mouth smile. Keep the rest of the body still and relaxed. ${MOUTH_CLOSED}`,
 };
 
 export const STATUS_STEPS = [
