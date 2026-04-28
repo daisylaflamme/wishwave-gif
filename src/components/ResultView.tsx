@@ -60,10 +60,8 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
   const hasMessage = !!recipientMessage?.trim();
 
   // Lazy export cache — nothing is encoded until the user asks for it.
-  // MP4 cache is split: "clean" (raw Runway output) vs "burned" (with text baked in).
   const [cache, setCache] = useState<{
-    mp4Clean?: Blob;
-    mp4Burned?: Blob;
+    mp4?: Blob;
     webp?: Blob;
     gif?: Blob;
   }>({});
@@ -71,9 +69,7 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
   const [exportProgress, setExportProgress] = useState(0);
   const [exportStage, setExportStage] = useState<string | null>(null);
   const [errors, setErrors] = useState<Partial<Record<ExportFormat, string>>>({});
-  const [showGif, setShowGif] = useState(false);
-  // Default ON when there's a message — most users want it baked in for sharing.
-  const [burnInMessage, setBurnInMessage] = useState(true);
+  const [showMoreFormats, setShowMoreFormats] = useState(false);
 
   // Video preview state
   const [videoReady, setVideoReady] = useState(false);
