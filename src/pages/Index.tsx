@@ -37,6 +37,10 @@ const RECIPIENT_STORAGE_KEY = "wishwave:recipientMessage";
 
 const Index = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(() => uploadCache.get().file);
+  const [originalImage, setOriginalImage] = useState<File | null>(() => uploadCache.get().original);
+  const [savedTransform, setSavedTransform] = useState<CropTransform | null>(() => uploadCache.get().transform);
+  const [repositionOpen, setRepositionOpen] = useState(false);
+  const [isFirstCrop, setIsFirstCrop] = useState(false);
   const [recipientMessage, setRecipientMessage] = useState(
     () => (typeof window !== "undefined" && sessionStorage.getItem(RECIPIENT_STORAGE_KEY)) || "",
   );
