@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Upload, ImageIcon, X, ArrowRight, Video } from "lucide-react";
+import { Upload, ImageIcon, X, ArrowRight, Video, Crop } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uploadCache } from "@/lib/uploadCache";
 import { toast } from "sonner";
@@ -8,12 +8,13 @@ interface ImageUploadProps {
   onImageSelect: (file: File) => void;
   selectedImage: File | null;
   onClear: () => void;
+  onAdjust?: () => void;
   onRequireAuth?: () => boolean;
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
-export function ImageUpload({ onImageSelect, selectedImage, onClear, onRequireAuth }: ImageUploadProps) {
+export function ImageUpload({ onImageSelect, selectedImage, onClear, onAdjust, onRequireAuth }: ImageUploadProps) {
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(() => uploadCache.get().preview);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -75,16 +76,30 @@ export function ImageUpload({ onImageSelect, selectedImage, onClear, onRequireAu
   if (selectedImage && preview) {
     return (
       <div className="relative rounded-lg overflow-hidden border-2 border-primary/20 max-w-sm mx-auto">
-        <img src={preview} alt="Selected" className="w-full h-64 object-cover" />
-        <Button
-          variant="destructive"
-          size="icon"
-          className="absolute top-2 right-2 h-11 w-11 rounded-full"
-          onClick={handleClear}
-          aria-label="Remove photo"
-        >
-          <X className="h-5 w-5" />
-        </Button>
+        <img src={preview} alt="Selected" className="w-full aspect-video object-cover" />
+        <div className="absolute top-2 right-2 flex gap-2">
+          {onAdjust && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9 rounded-full shadow-md gap-1.5"
+              onClick={onAdjust}
+              aria-label="Adjust framing"
+            >
+              <Crop className="h-4 w-4" />
+              <span className="text-xs">Adjust</span>
+            </Button>
+          )}
+          <Button
+            variant="destructive"
+            size="icon"
+            className="h-9 w-9 rounded-full shadow-md"
+            onClick={handleClear}
+            aria-label="Remove photo"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     );
   }

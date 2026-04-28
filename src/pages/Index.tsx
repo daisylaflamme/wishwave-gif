@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ImageUpload } from "@/components/ImageUpload";
+import { ImageRepositionDialog } from "@/components/ImageRepositionDialog";
 import { StyleSelector } from "@/components/StyleSelector";
 import { ProgressOverlay } from "@/components/ProgressOverlay";
 import { ResultView } from "@/components/ResultView";
@@ -24,6 +25,7 @@ import { useGeneration } from "@/hooks/useGeneration";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { uploadCache } from "@/lib/uploadCache";
+import type { CropTransform } from "@/lib/imageCrop";
 import { Wand2, ShoppingCart, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isNativeApp, openExternal } from "@/lib/platform";
@@ -35,6 +37,10 @@ const RECIPIENT_STORAGE_KEY = "wishwave:recipientMessage";
 
 const Index = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(() => uploadCache.get().file);
+  const [originalImage, setOriginalImage] = useState<File | null>(() => uploadCache.get().original);
+  const [savedTransform, setSavedTransform] = useState<CropTransform | null>(() => uploadCache.get().transform);
+  const [repositionOpen, setRepositionOpen] = useState(false);
+  const [isFirstCrop, setIsFirstCrop] = useState(false);
   const [recipientMessage, setRecipientMessage] = useState(
     () => (typeof window !== "undefined" && sessionStorage.getItem(RECIPIENT_STORAGE_KEY)) || "",
   );
@@ -94,13 +100,46 @@ const Index = () => {
       handleOutOfCredits();
       return;
     }
-    setSelectedImage(file);
-    // ImageUpload also writes to uploadCache, but ensure file ref is stored.
-    uploadCache.set(file, uploadCache.get().preview);
+    // Stash the original; don't set the cropped `selectedImage` until the user confirms framing.
+    setOriginalImage(file);
+    setSavedTransform(null);
+    uploadCache.setOriginal(file, null);
+    setIsFirstCrop(true);
+    setRepositionOpen(true);
+  };
+
+  const handleAdjustFraming = () => {
+    if (!originalImage) return;
+    setIsFirstCrop(false);
+    setRepositionOpen(true);
+  };
+
+  const handleRepositionConfirm = (croppedFile: File, transform: CropTransform) => {
+    setSelectedImage(croppedFile);
+    setSavedTransform(transform);
+    const previewUrl = URL.createObjectURL(croppedFile);
+    uploadCache.set(croppedFile, previewUrl);
+    uploadCache.setOriginal(originalImage, transform);
+    setRepositionOpen(false);
+    setIsFirstCrop(false);
+  };
+
+  const handleRepositionCancel = () => {
+    setRepositionOpen(false);
+    if (isFirstCrop) {
+      // No previous crop existed — drop everything back to the upload state.
+      setOriginalImage(null);
+      setSavedTransform(null);
+      setSelectedImage(null);
+      uploadCache.clear();
+    }
+    setIsFirstCrop(false);
   };
 
   const handleClearImage = () => {
     setSelectedImage(null);
+    setOriginalImage(null);
+    setSavedTransform(null);
     uploadCache.clear();
   };
 
@@ -131,6 +170,8 @@ const Index = () => {
 
   const handleCreateAnother = () => {
     setSelectedImage(null);
+    setOriginalImage(null);
+    setSavedTransform(null);
     setRecipientMessage("");
     setMotionStyle("wave");
     setConsent(false);
@@ -196,6 +237,7 @@ const Index = () => {
                 onImageSelect={handleImageSelect}
                 selectedImage={selectedImage}
                 onClear={handleClearImage}
+                onAdjust={originalImage ? handleAdjustFraming : undefined}
                 onRequireAuth={requireAuth}
               />
             </div>
@@ -349,6 +391,13 @@ const Index = () => {
           <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
         </Suspense>
       )}
+      <ImageRepositionDialog
+        open={repositionOpen}
+        sourceFile={originalImage}
+        initialTransform={savedTransform ?? undefined}
+        onConfirm={handleRepositionConfirm}
+        onCancel={handleRepositionCancel}
+      />
       <SupportChatButton hidden={status !== "idle" && status !== "ready"} />
     </div>
   );
