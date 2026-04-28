@@ -69,11 +69,14 @@ const Index = () => {
   const noCredits = !!user && !creditsLoading && credits <= 0;
 
   // Auto-open paywall when user lands with 0 credits and tries to interact (web only).
+  // Suppress while a generation is in flight so the modal doesn't pop over the loading state.
+  const isGenerating =
+    status === "uploading" || status === "generating_video" || status === "finalizing";
   useEffect(() => {
-    if (!native && noCredits && selectedImage) {
+    if (!native && noCredits && selectedImage && !isGenerating) {
       setPricingOpen(true);
     }
-  }, [native, noCredits, selectedImage]);
+  }, [native, noCredits, selectedImage, isGenerating]);
 
   const requireAuth = (): boolean => {
     if (!user) {
