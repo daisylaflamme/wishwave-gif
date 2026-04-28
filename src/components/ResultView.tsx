@@ -11,11 +11,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { createGif } from "@/lib/createGif";
 import { createWebp } from "@/lib/createWebp";
-import { burnMessageIntoMp4 } from "@/lib/overlayMp4";
 import { toast } from "sonner";
 import { isNativeApp, nativeShare, openExternal, saveToDevice } from "@/lib/platform";
 
@@ -63,10 +60,8 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
   const hasMessage = !!recipientMessage?.trim();
 
   // Lazy export cache — nothing is encoded until the user asks for it.
-  // MP4 cache is split: "clean" (raw Runway output) vs "burned" (with text baked in).
   const [cache, setCache] = useState<{
-    mp4Clean?: Blob;
-    mp4Burned?: Blob;
+    mp4?: Blob;
     webp?: Blob;
     gif?: Blob;
   }>({});
@@ -74,9 +69,7 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
   const [exportProgress, setExportProgress] = useState(0);
   const [exportStage, setExportStage] = useState<string | null>(null);
   const [errors, setErrors] = useState<Partial<Record<ExportFormat, string>>>({});
-  const [showGif, setShowGif] = useState(false);
-  // Default ON when there's a message — most users want it baked in for sharing.
-  const [burnInMessage, setBurnInMessage] = useState(true);
+  const [showMoreFormats, setShowMoreFormats] = useState(false);
 
   // Video preview state
   const [videoReady, setVideoReady] = useState(false);
@@ -126,7 +119,7 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
 
   /** Fetch the raw Runway MP4 once and cache it. */
   const fetchCleanMp4 = async (): Promise<Blob> => {
-    if (cache.mp4Clean) return cache.mp4Clean;
+    if (cache.mp4) return cache.mp4;
     const res = await fetch(videoUrl);
     if (!res.ok) {
       if (res.status === 401 || res.status === 403 || res.status === 410) {
@@ -138,23 +131,14 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
     if (blob.type !== MIME_BY_FORMAT.mp4) {
       blob = new Blob([blob], { type: MIME_BY_FORMAT.mp4 });
     }
-    setCache((prev) => ({ ...prev, mp4Clean: blob }));
+    setCache((prev) => ({ ...prev, mp4: blob }));
     return blob;
   };
 
-  /** Resolve which MP4 variant to deliver based on the current toggle. */
-  const wantsBurnedMp4 = () => burnInMessage && hasMessage;
-
   /** Ensure we have a blob for the requested format (encode lazily if needed). */
   const ensureBlob = async (format: ExportFormat): Promise<Blob | null> => {
-    if (format === "mp4") {
-      const burned = wantsBurnedMp4();
-      const cached = burned ? cache.mp4Burned : cache.mp4Clean;
-      if (cached) return cached;
-    } else {
-      const cached = cache[format];
-      if (cached) return cached;
-    }
+    const cached = cache[format];
+    if (cached) return cached;
 
     if (exporting) {
       toast.info("Already preparing a download — hang tight.");
@@ -169,21 +153,9 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
     try {
       let blob: Blob;
       if (format === "mp4") {
-        if (wantsBurnedMp4()) {
-          setExportStage("Fetching video…");
-          const clean = await fetchCleanMp4();
-          setExportStage("Adding your message…");
-          blob = await burnMessageIntoMp4({
-            videoBlob: clean,
-            text: recipientMessage!.trim(),
-            onProgress: setExportProgress,
-          });
-          setCache((prev) => ({ ...prev, mp4Burned: blob }));
-        } else {
-          setExportStage("Downloading…");
-          blob = await fetchCleanMp4();
-          setExportProgress(100);
-        }
+        setExportStage("Downloading…");
+        blob = await fetchCleanMp4();
+        setExportProgress(100);
       } else if (format === "webp") {
         blob = await createWebp(videoUrl, recipientMessage, setExportProgress);
         setCache((prev) => ({ ...prev, webp: blob }));
@@ -202,25 +174,19 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
 
       let friendlyMessage: string;
       if (format === "webp" && isWasmError) {
-        friendlyMessage = "Animated WebP is temporarily unavailable. MP4 download is recommended.";
+        friendlyMessage = "Animated WebP is temporarily unavailable. Try GIF or MP4 instead.";
       } else if (format === "gif" && isWasmError) {
-        friendlyMessage = "GIF export is temporarily unavailable. MP4 download is recommended.";
-      } else if (format === "mp4" && wantsBurnedMp4() && isWasmError) {
-        friendlyMessage = "Couldn't bake the message into MP4. Turn off \"Include message in video\" to download the clean version.";
+        friendlyMessage = "GIF export is temporarily unavailable. Try WebP or MP4 instead.";
       } else if (format === "mp4") {
         friendlyMessage = rawMessage.startsWith("Couldn't") || rawMessage.startsWith("This video")
           ? rawMessage
           : "Couldn't prepare MP4. Please try again.";
       } else {
-        friendlyMessage = `Couldn't prepare ${format.toUpperCase()}. Your MP4 download is still available.`;
+        friendlyMessage = `Couldn't prepare ${format.toUpperCase()}. Try a different format.`;
       }
 
       setErrors((prev) => ({ ...prev, [format]: friendlyMessage }));
-      const others =
-        format === "mp4"
-          ? "You can still try WebP or GIF below."
-          : "Your MP4 download is still available.";
-      toast.error(friendlyMessage, { description: others });
+      toast.error(friendlyMessage);
       return null;
     } finally {
       setExporting(null);
@@ -400,47 +366,11 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
 
       {/* Download buttons */}
       <div className="space-y-2.5">
-        {hasMessage && (
-          <div className="flex items-start justify-between gap-3 rounded-xl border border-border bg-card/40 p-3">
-            <div className="space-y-0.5 min-w-0">
-              <Label
-                htmlFor="burn-in-toggle"
-                className="text-sm font-medium text-foreground cursor-pointer"
-              >
-                Include message in video
-              </Label>
-              <p className="text-[11px] text-muted-foreground leading-snug">
-                Bakes your greeting into the MP4 so it shows on social media. Adds a few seconds to download.
-              </p>
-            </div>
-            <Switch
-              id="burn-in-toggle"
-              checked={burnInMessage}
-              onCheckedChange={setBurnInMessage}
-              disabled={!!exporting}
-            />
-          </div>
-        )}
-
         <Button
-          onClick={() => handleDownload("mp4")}
-          disabled={!!exporting || videoError}
-          className="w-full gap-2"
-          size="lg"
-        >
-          {exporting === "mp4" ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Download className="h-4 w-4" />
-          )}
-          {exportLabel("mp4", wantsBurnedMp4() ? "Download MP4 with message" : "Download MP4")}
-        </Button>
-
-        <Button
-          variant="outline"
           onClick={() => handleDownload("webp")}
           disabled={!!exporting || videoError}
           className="w-full gap-2"
+          size="lg"
         >
           {exporting === "webp" ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -454,11 +384,29 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
           <p className="text-[11px] text-destructive text-center">{errors.webp}</p>
         )}
 
-        {/* GIF — collapsed compatibility option */}
-        {!showGif ? (
+        <Button
+          variant="outline"
+          onClick={() => handleDownload("gif")}
+          disabled={!!exporting || videoError}
+          className="w-full gap-2"
+        >
+          {exporting === "gif" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
+          {exportLabel("gif", "Download GIF")}
+        </Button>
+
+        {errors.gif && (
+          <p className="text-[11px] text-destructive text-center">{errors.gif}</p>
+        )}
+
+        {/* MP4 — collapsed under more format options */}
+        {!showMoreFormats ? (
           <button
             type="button"
-            onClick={() => setShowGif(true)}
+            onClick={() => setShowMoreFormats(true)}
             className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center justify-center gap-1 pt-1"
           >
             <ChevronDown className="h-3 w-3" />
@@ -468,26 +416,31 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
           <div className="pt-1 space-y-1.5">
             <Button
               variant="ghost"
-              onClick={() => handleDownload("gif")}
+              onClick={() => handleDownload("mp4")}
               disabled={!!exporting || videoError}
               className="w-full gap-2 text-muted-foreground hover:text-foreground"
               size="sm"
             >
-              {exporting === "gif" ? (
+              {exporting === "mp4" ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Download className="h-4 w-4" />
               )}
-              {exportLabel("gif", "Download GIF (compatibility mode)")}
+              {exportLabel("mp4", "Download MP4")}
             </Button>
-            {errors.gif && (
-              <p className="text-[11px] text-destructive text-center">{errors.gif}</p>
+            {hasMessage && (
+              <p className="text-[11px] text-muted-foreground text-center px-2 leading-snug">
+                Note: the MP4 won't include your optional message overlay.
+              </p>
+            )}
+            {errors.mp4 && (
+              <p className="text-[11px] text-destructive text-center">{errors.mp4}</p>
             )}
           </div>
         )}
 
         <p className="text-[11px] text-muted-foreground text-center pt-1.5">
-          MP4 works everywhere. WebP is smaller. GIF is for legacy compatibility.
+          WebP is smaller and includes your message. GIF is for legacy compatibility.
         </p>
       </div>
 
