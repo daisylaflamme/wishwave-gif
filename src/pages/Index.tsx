@@ -100,13 +100,46 @@ const Index = () => {
       handleOutOfCredits();
       return;
     }
-    setSelectedImage(file);
-    // ImageUpload also writes to uploadCache, but ensure file ref is stored.
-    uploadCache.set(file, uploadCache.get().preview);
+    // Stash the original; don't set the cropped `selectedImage` until the user confirms framing.
+    setOriginalImage(file);
+    setSavedTransform(null);
+    uploadCache.setOriginal(file, null);
+    setIsFirstCrop(true);
+    setRepositionOpen(true);
+  };
+
+  const handleAdjustFraming = () => {
+    if (!originalImage) return;
+    setIsFirstCrop(false);
+    setRepositionOpen(true);
+  };
+
+  const handleRepositionConfirm = (croppedFile: File, transform: CropTransform) => {
+    setSelectedImage(croppedFile);
+    setSavedTransform(transform);
+    const previewUrl = URL.createObjectURL(croppedFile);
+    uploadCache.set(croppedFile, previewUrl);
+    uploadCache.setOriginal(originalImage, transform);
+    setRepositionOpen(false);
+    setIsFirstCrop(false);
+  };
+
+  const handleRepositionCancel = () => {
+    setRepositionOpen(false);
+    if (isFirstCrop) {
+      // No previous crop existed — drop everything back to the upload state.
+      setOriginalImage(null);
+      setSavedTransform(null);
+      setSelectedImage(null);
+      uploadCache.clear();
+    }
+    setIsFirstCrop(false);
   };
 
   const handleClearImage = () => {
     setSelectedImage(null);
+    setOriginalImage(null);
+    setSavedTransform(null);
     uploadCache.clear();
   };
 
