@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Upload, ImageIcon, X, ArrowRight, Video } from "lucide-react";
+import { Upload, ImageIcon, X, ArrowRight, Video, Crop } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uploadCache } from "@/lib/uploadCache";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ interface ImageUploadProps {
   onImageSelect: (file: File) => void;
   selectedImage: File | null;
   onClear: () => void;
+  onAdjust?: () => void;
   onRequireAuth?: () => boolean;
 }
 
