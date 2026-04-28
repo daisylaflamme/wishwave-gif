@@ -19,21 +19,21 @@ export function ImageUpload({ onImageSelect, selectedImage, onClear, onAdjust, o
   const [preview, setPreview] = useState<string | null>(() => uploadCache.get().preview);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Restore preview after navigation (e.g., user clicked Learn more then came back).
+  // Sync preview to selectedImage. Handles initial mount, navigation restore,
+  // and re-adjust (where selectedImage swaps to a new cropped File).
   useEffect(() => {
-    if (selectedImage && !preview) {
-      const cached = uploadCache.get();
-      if (cached.preview && cached.file === selectedImage) {
-        setPreview(cached.preview);
-      } else {
-        const url = URL.createObjectURL(selectedImage);
-        setPreview(url);
-        uploadCache.set(selectedImage, url);
-      }
+    if (!selectedImage) {
+      if (preview) setPreview(null);
+      return;
     }
-    if (!selectedImage && preview) {
-      setPreview(null);
+    const cached = uploadCache.get();
+    if (cached.file === selectedImage && cached.preview) {
+      if (preview !== cached.preview) setPreview(cached.preview);
+      return;
     }
+    const url = URL.createObjectURL(selectedImage);
+    setPreview(url);
+    uploadCache.set(selectedImage, url);
   }, [selectedImage, preview]);
 
   const handleFile = useCallback((file: File) => {
