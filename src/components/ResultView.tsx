@@ -400,6 +400,28 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
 
       {/* Download buttons */}
       <div className="space-y-2.5">
+        {hasMessage && (
+          <div className="flex items-start justify-between gap-3 rounded-xl border border-border bg-card/40 p-3">
+            <div className="space-y-0.5 min-w-0">
+              <Label
+                htmlFor="burn-in-toggle"
+                className="text-sm font-medium text-foreground cursor-pointer"
+              >
+                Include message in video
+              </Label>
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                Bakes your greeting into the MP4 so it shows on social media. Adds a few seconds to download.
+              </p>
+            </div>
+            <Switch
+              id="burn-in-toggle"
+              checked={burnInMessage}
+              onCheckedChange={setBurnInMessage}
+              disabled={!!exporting}
+            />
+          </div>
+        )}
+
         <Button
           onClick={() => handleDownload("mp4")}
           disabled={!!exporting || videoError}
@@ -411,7 +433,7 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
           ) : (
             <Download className="h-4 w-4" />
           )}
-          {exportLabel("mp4", "Download MP4")}
+          {exportLabel("mp4", wantsBurnedMp4() ? "Download MP4 with message" : "Download MP4")}
         </Button>
 
         <Button
