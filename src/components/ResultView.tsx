@@ -124,10 +124,38 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
     downloadBlob(blob, filename);
   };
 
+  /** Fetch the raw Runway MP4 once and cache it. */
+  const fetchCleanMp4 = async (): Promise<Blob> => {
+    if (cache.mp4Clean) return cache.mp4Clean;
+    const res = await fetch(videoUrl);
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403 || res.status === 410) {
+        throw new Error("This video link has expired. Please regenerate from a fresh creation.");
+      }
+      throw new Error(`Couldn't download the video (status ${res.status}).`);
+    }
+    let blob = await res.blob();
+    if (blob.type !== MIME_BY_FORMAT.mp4) {
+      blob = new Blob([blob], { type: MIME_BY_FORMAT.mp4 });
+    }
+    setCache((prev) => ({ ...prev, mp4Clean: blob }));
+    return blob;
+  };
+
+  /** Resolve which MP4 variant to deliver based on the current toggle. */
+  const wantsBurnedMp4 = () => burnInMessage && hasMessage;
+
   /** Ensure we have a blob for the requested format (encode lazily if needed). */
   const ensureBlob = async (format: ExportFormat): Promise<Blob | null> => {
-    const cached = cache[format];
-    if (cached) return cached;
+    if (format === "mp4") {
+      const burned = wantsBurnedMp4();
+      const cached = burned ? cache.mp4Burned : cache.mp4Clean;
+      if (cached) return cached;
+    } else {
+      const cached = cache[format];
+      if (cached) return cached;
+    }
+
     if (exporting) {
       toast.info("Already preparing a download — hang tight.");
       return null;
@@ -135,46 +163,50 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
 
     setExporting(format);
     setExportProgress(0);
+    setExportStage(null);
     setErrors((prev) => ({ ...prev, [format]: undefined }));
 
     try {
       let blob: Blob;
       if (format === "mp4") {
-        const res = await fetch(videoUrl);
-        if (!res.ok) {
-          if (res.status === 401 || res.status === 403 || res.status === 410) {
-            throw new Error("This video link has expired. Please regenerate from a fresh creation.");
-          }
-          throw new Error(`Couldn't download the video (status ${res.status}).`);
+        if (wantsBurnedMp4()) {
+          setExportStage("Fetching video…");
+          const clean = await fetchCleanMp4();
+          setExportStage("Adding your message…");
+          blob = await burnMessageIntoMp4({
+            videoBlob: clean,
+            text: recipientMessage!.trim(),
+            onProgress: setExportProgress,
+          });
+          setCache((prev) => ({ ...prev, mp4Burned: blob }));
+        } else {
+          setExportStage("Downloading…");
+          blob = await fetchCleanMp4();
+          setExportProgress(100);
         }
-        blob = await res.blob();
-        // Some Supabase responses return application/octet-stream; force MP4 mime for the file.
-        if (blob.type !== MIME_BY_FORMAT.mp4) {
-          blob = new Blob([blob], { type: MIME_BY_FORMAT.mp4 });
-        }
-        setExportProgress(100);
       } else if (format === "webp") {
         blob = await createWebp(videoUrl, recipientMessage, setExportProgress);
+        setCache((prev) => ({ ...prev, webp: blob }));
       } else {
         blob = await createGif(videoUrl, recipientMessage, setExportProgress);
+        setCache((prev) => ({ ...prev, gif: blob }));
       }
 
-      setCache((prev) => ({ ...prev, [format]: blob }));
       return blob;
     } catch (err) {
-      // Always log the raw technical error for debugging.
       console.error(`${format} export failed:`, err);
 
       const rawMessage = err instanceof Error ? err.message : String(err);
       const isWasmError =
         /WebAssembly|wasm|CompileError|magic word|Aborted\(/i.test(rawMessage);
 
-      // Map technical errors to clean, user-friendly messages.
       let friendlyMessage: string;
       if (format === "webp" && isWasmError) {
         friendlyMessage = "Animated WebP is temporarily unavailable. MP4 download is recommended.";
       } else if (format === "gif" && isWasmError) {
         friendlyMessage = "GIF export is temporarily unavailable. MP4 download is recommended.";
+      } else if (format === "mp4" && wantsBurnedMp4() && isWasmError) {
+        friendlyMessage = "Couldn't bake the message into MP4. Turn off \"Include message in video\" to download the clean version.";
       } else if (format === "mp4") {
         friendlyMessage = rawMessage.startsWith("Couldn't") || rawMessage.startsWith("This video")
           ? rawMessage
@@ -193,6 +225,7 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
     } finally {
       setExporting(null);
       setExportProgress(0);
+      setExportStage(null);
     }
   };
 
