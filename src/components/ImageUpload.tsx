@@ -14,7 +14,7 @@ interface ImageUploadProps {
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
-export function ImageUpload({ onImageSelect, selectedImage, onClear, onRequireAuth }: ImageUploadProps) {
+export function ImageUpload({ onImageSelect, selectedImage, onClear, onAdjust, onRequireAuth }: ImageUploadProps) {
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(() => uploadCache.get().preview);
   const inputRef = useRef<HTMLInputElement>(null);
