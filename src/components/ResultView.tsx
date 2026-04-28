@@ -119,7 +119,7 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
 
   /** Fetch the raw Runway MP4 once and cache it. */
   const fetchCleanMp4 = async (): Promise<Blob> => {
-    if (cache.mp4Clean) return cache.mp4Clean;
+    if (cache.mp4) return cache.mp4;
     const res = await fetch(videoUrl);
     if (!res.ok) {
       if (res.status === 401 || res.status === 403 || res.status === 410) {
@@ -131,23 +131,14 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
     if (blob.type !== MIME_BY_FORMAT.mp4) {
       blob = new Blob([blob], { type: MIME_BY_FORMAT.mp4 });
     }
-    setCache((prev) => ({ ...prev, mp4Clean: blob }));
+    setCache((prev) => ({ ...prev, mp4: blob }));
     return blob;
   };
 
-  /** Resolve which MP4 variant to deliver based on the current toggle. */
-  const wantsBurnedMp4 = () => burnInMessage && hasMessage;
-
   /** Ensure we have a blob for the requested format (encode lazily if needed). */
   const ensureBlob = async (format: ExportFormat): Promise<Blob | null> => {
-    if (format === "mp4") {
-      const burned = wantsBurnedMp4();
-      const cached = burned ? cache.mp4Burned : cache.mp4Clean;
-      if (cached) return cached;
-    } else {
-      const cached = cache[format];
-      if (cached) return cached;
-    }
+    const cached = cache[format];
+    if (cached) return cached;
 
     if (exporting) {
       toast.info("Already preparing a download — hang tight.");
@@ -162,21 +153,9 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
     try {
       let blob: Blob;
       if (format === "mp4") {
-        if (wantsBurnedMp4()) {
-          setExportStage("Fetching video…");
-          const clean = await fetchCleanMp4();
-          setExportStage("Adding your message…");
-          blob = await burnMessageIntoMp4({
-            videoBlob: clean,
-            text: recipientMessage!.trim(),
-            onProgress: setExportProgress,
-          });
-          setCache((prev) => ({ ...prev, mp4Burned: blob }));
-        } else {
-          setExportStage("Downloading…");
-          blob = await fetchCleanMp4();
-          setExportProgress(100);
-        }
+        setExportStage("Downloading…");
+        blob = await fetchCleanMp4();
+        setExportProgress(100);
       } else if (format === "webp") {
         blob = await createWebp(videoUrl, recipientMessage, setExportProgress);
         setCache((prev) => ({ ...prev, webp: blob }));
@@ -195,25 +174,19 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
 
       let friendlyMessage: string;
       if (format === "webp" && isWasmError) {
-        friendlyMessage = "Animated WebP is temporarily unavailable. MP4 download is recommended.";
+        friendlyMessage = "Animated WebP is temporarily unavailable. Try GIF or MP4 instead.";
       } else if (format === "gif" && isWasmError) {
-        friendlyMessage = "GIF export is temporarily unavailable. MP4 download is recommended.";
-      } else if (format === "mp4" && wantsBurnedMp4() && isWasmError) {
-        friendlyMessage = "Couldn't bake the message into MP4. Turn off \"Include message in video\" to download the clean version.";
+        friendlyMessage = "GIF export is temporarily unavailable. Try WebP or MP4 instead.";
       } else if (format === "mp4") {
         friendlyMessage = rawMessage.startsWith("Couldn't") || rawMessage.startsWith("This video")
           ? rawMessage
           : "Couldn't prepare MP4. Please try again.";
       } else {
-        friendlyMessage = `Couldn't prepare ${format.toUpperCase()}. Your MP4 download is still available.`;
+        friendlyMessage = `Couldn't prepare ${format.toUpperCase()}. Try a different format.`;
       }
 
       setErrors((prev) => ({ ...prev, [format]: friendlyMessage }));
-      const others =
-        format === "mp4"
-          ? "You can still try WebP or GIF below."
-          : "Your MP4 download is still available.";
-      toast.error(friendlyMessage, { description: others });
+      toast.error(friendlyMessage);
       return null;
     } finally {
       setExporting(null);
