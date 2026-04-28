@@ -15,16 +15,15 @@ export interface CropTransform {
 
 export const IDENTITY_TRANSFORM: CropTransform = { scale: 1, offsetX: 0, offsetY: 0 };
 
-/** Load a File into an HTMLImageElement (decoded). */
+/** Load a File into an HTMLImageElement (decoded).
+ * Note: we keep the object URL alive for the lifetime of the image so consumers
+ * can use `img.src` as a valid URL (e.g. as a `<img src>` in a preview).
+ */
 export function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
-    img.onload = () => {
-      // Keep URL alive until caller revokes; revoke once the image has decoded into memory.
-      URL.revokeObjectURL(url);
-      resolve(img);
-    };
+    img.onload = () => resolve(img);
     img.onerror = (e) => {
       URL.revokeObjectURL(url);
       reject(e);
