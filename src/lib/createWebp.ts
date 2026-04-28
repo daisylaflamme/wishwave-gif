@@ -282,7 +282,11 @@ export async function createWebp(
     const hasOverlay = normalizedText.length > 0;
 
     // Lazy-load the encoder so its WASM only ships when the user asks for WebP.
-    const { encode: encodeWebp } = await import("@jsquash/webp");
+    // We must explicitly pass the WASM binary URL — relying on the encoder's
+    // default `import.meta.url`-based resolution breaks under Vite's dep
+    // pre-bundling (the encoder ends up requesting `/webp_enc_simd.wasm`
+    // from the dev server, which returns the SPA's index.html → "<!do…").
+    const encodeWebp = await loadWebpEncoder();
 
     const frames: FrameInput[] = [];
 
