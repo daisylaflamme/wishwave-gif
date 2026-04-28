@@ -76,16 +76,30 @@ export function ImageUpload({ onImageSelect, selectedImage, onClear, onAdjust, o
   if (selectedImage && preview) {
     return (
       <div className="relative rounded-lg overflow-hidden border-2 border-primary/20 max-w-sm mx-auto">
-        <img src={preview} alt="Selected" className="w-full h-64 object-cover" />
-        <Button
-          variant="destructive"
-          size="icon"
-          className="absolute top-2 right-2 h-11 w-11 rounded-full"
-          onClick={handleClear}
-          aria-label="Remove photo"
-        >
-          <X className="h-5 w-5" />
-        </Button>
+        <img src={preview} alt="Selected" className="w-full aspect-video object-cover" />
+        <div className="absolute top-2 right-2 flex gap-2">
+          {onAdjust && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9 rounded-full shadow-md gap-1.5"
+              onClick={onAdjust}
+              aria-label="Adjust framing"
+            >
+              <Crop className="h-4 w-4" />
+              <span className="text-xs">Adjust</span>
+            </Button>
+          )}
+          <Button
+            variant="destructive"
+            size="icon"
+            className="h-9 w-9 rounded-full shadow-md"
+            onClick={handleClear}
+            aria-label="Remove photo"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     );
   }
