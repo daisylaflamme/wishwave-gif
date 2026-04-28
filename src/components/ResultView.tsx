@@ -324,7 +324,13 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
 
   const exportLabel = (format: ExportFormat, base: string) => {
     if (exporting === format) {
-      return format === "mp4" ? "Downloading…" : `Encoding ${format.toUpperCase()}… ${exportProgress}%`;
+      if (format === "mp4") {
+        if (exportStage && exportProgress > 0 && exportProgress < 100) {
+          return `${exportStage} ${exportProgress}%`;
+        }
+        return exportStage ?? "Downloading…";
+      }
+      return `Encoding ${format.toUpperCase()}… ${exportProgress}%`;
     }
     return base;
   };
