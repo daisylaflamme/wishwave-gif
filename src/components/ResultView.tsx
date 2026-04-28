@@ -11,8 +11,11 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { createGif } from "@/lib/createGif";
 import { createWebp } from "@/lib/createWebp";
+import { burnMessageIntoMp4 } from "@/lib/overlayMp4";
 import { toast } from "sonner";
 import { isNativeApp, nativeShare, openExternal, saveToDevice } from "@/lib/platform";
 
@@ -57,12 +60,23 @@ const InstagramIcon = () => (
 );
 
 export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: ResultViewProps) {
+  const hasMessage = !!recipientMessage?.trim();
+
   // Lazy export cache — nothing is encoded until the user asks for it.
-  const [cache, setCache] = useState<Partial<Record<ExportFormat, Blob>>>({});
+  // MP4 cache is split: "clean" (raw Runway output) vs "burned" (with text baked in).
+  const [cache, setCache] = useState<{
+    mp4Clean?: Blob;
+    mp4Burned?: Blob;
+    webp?: Blob;
+    gif?: Blob;
+  }>({});
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
   const [exportProgress, setExportProgress] = useState(0);
+  const [exportStage, setExportStage] = useState<string | null>(null);
   const [errors, setErrors] = useState<Partial<Record<ExportFormat, string>>>({});
   const [showGif, setShowGif] = useState(false);
+  // Default ON when there's a message — most users want it baked in for sharing.
+  const [burnInMessage, setBurnInMessage] = useState(true);
 
   // Video preview state
   const [videoReady, setVideoReady] = useState(false);
