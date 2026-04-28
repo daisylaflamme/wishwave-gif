@@ -239,6 +239,37 @@ function buildAnimatedWebp(width: number, height: number, frames: FrameInput[]):
 
 // ---------------------------------------------------------------------------
 
+// Resolve the encoder WASM URLs at build time so Vite emits real asset files.
+// Both the SIMD and non-SIMD variants ship in @jsquash/webp; we pick at runtime
+// based on `wasm-feature-detect`, mirroring the package's own logic.
+type WebpEncodeFn = (
+  data: ImageData,
+  options?: { quality?: number },
+) => Promise<ArrayBuffer>;
+
+let webpEncoderPromise: Promise<WebpEncodeFn> | null = null;
+
+async function loadWebpEncoder(): Promise<WebpEncodeFn> {
+  if (webpEncoderPromise) return webpEncoderPromise;
+  webpEncoderPromise = (async () => {
+    // Import init/encode from the encoder module directly (the package's
+    // top-level index only re-exports `encode`).
+    const encoderMod: {
+      init: (module?: unknown, opts?: { wasmBinary?: ArrayBuffer }) => Promise<unknown>;
+      default: WebpEncodeFn;
+    } = await import("@jsquash/webp/encode.js");
+    // Use the non-SIMD build — it loads reliably across all browsers and the
+    // size/perf delta is negligible for our 60 frame, 512px-wide encode.
+    const wasmUrl: string = (await import("@jsquash/webp/codec/enc/webp_enc.wasm?url")).default;
+    const res = await fetch(wasmUrl);
+    if (!res.ok) throw new Error(`Failed to load WebP WASM (${res.status})`);
+    const wasmBinary = await res.arrayBuffer();
+    await encoderMod.init(undefined, { wasmBinary });
+    return encoderMod.default;
+  })();
+  return webpEncoderPromise;
+}
+
 export async function createWebp(
   videoUrl: string,
   overlayText?: string | null,
@@ -282,7 +313,11 @@ export async function createWebp(
     const hasOverlay = normalizedText.length > 0;
 
     // Lazy-load the encoder so its WASM only ships when the user asks for WebP.
-    const { encode: encodeWebp } = await import("@jsquash/webp");
+    // We must explicitly pass the WASM binary URL — relying on the encoder's
+    // default `import.meta.url`-based resolution breaks under Vite's dep
+    // pre-bundling (the encoder ends up requesting `/webp_enc_simd.wasm`
+    // from the dev server, which returns the SPA's index.html → "<!do…").
+    const encodeWebp = await loadWebpEncoder();
 
     const frames: FrameInput[] = [];
 
