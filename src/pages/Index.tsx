@@ -170,6 +170,8 @@ const Index = () => {
 
   const handleCreateAnother = () => {
     setSelectedImage(null);
+    setOriginalImage(null);
+    setSavedTransform(null);
     setRecipientMessage("");
     setMotionStyle("wave");
     setConsent(false);
