@@ -237,6 +237,7 @@ const Index = () => {
                 onImageSelect={handleImageSelect}
                 selectedImage={selectedImage}
                 onClear={handleClearImage}
+                onAdjust={originalImage ? handleAdjustFraming : undefined}
                 onRequireAuth={requireAuth}
               />
             </div>
