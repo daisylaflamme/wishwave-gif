@@ -391,6 +391,13 @@ const Index = () => {
           <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
         </Suspense>
       )}
+      <ImageRepositionDialog
+        open={repositionOpen}
+        sourceFile={originalImage}
+        initialTransform={savedTransform ?? undefined}
+        onConfirm={handleRepositionConfirm}
+        onCancel={handleRepositionCancel}
+      />
       <SupportChatButton hidden={status !== "idle" && status !== "ready"} />
     </div>
   );
