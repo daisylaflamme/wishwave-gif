@@ -366,47 +366,11 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
 
       {/* Download buttons */}
       <div className="space-y-2.5">
-        {hasMessage && (
-          <div className="flex items-start justify-between gap-3 rounded-xl border border-border bg-card/40 p-3">
-            <div className="space-y-0.5 min-w-0">
-              <Label
-                htmlFor="burn-in-toggle"
-                className="text-sm font-medium text-foreground cursor-pointer"
-              >
-                Include message in video
-              </Label>
-              <p className="text-[11px] text-muted-foreground leading-snug">
-                Bakes your greeting into the MP4 so it shows on social media. Adds a few seconds to download.
-              </p>
-            </div>
-            <Switch
-              id="burn-in-toggle"
-              checked={burnInMessage}
-              onCheckedChange={setBurnInMessage}
-              disabled={!!exporting}
-            />
-          </div>
-        )}
-
         <Button
-          onClick={() => handleDownload("mp4")}
-          disabled={!!exporting || videoError}
-          className="w-full gap-2"
-          size="lg"
-        >
-          {exporting === "mp4" ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Download className="h-4 w-4" />
-          )}
-          {exportLabel("mp4", wantsBurnedMp4() ? "Download MP4 with message" : "Download MP4")}
-        </Button>
-
-        <Button
-          variant="outline"
           onClick={() => handleDownload("webp")}
           disabled={!!exporting || videoError}
           className="w-full gap-2"
+          size="lg"
         >
           {exporting === "webp" ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -420,11 +384,29 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
           <p className="text-[11px] text-destructive text-center">{errors.webp}</p>
         )}
 
-        {/* GIF — collapsed compatibility option */}
-        {!showGif ? (
+        <Button
+          variant="outline"
+          onClick={() => handleDownload("gif")}
+          disabled={!!exporting || videoError}
+          className="w-full gap-2"
+        >
+          {exporting === "gif" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
+          {exportLabel("gif", "Download GIF")}
+        </Button>
+
+        {errors.gif && (
+          <p className="text-[11px] text-destructive text-center">{errors.gif}</p>
+        )}
+
+        {/* MP4 — collapsed under more format options */}
+        {!showMoreFormats ? (
           <button
             type="button"
-            onClick={() => setShowGif(true)}
+            onClick={() => setShowMoreFormats(true)}
             className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center justify-center gap-1 pt-1"
           >
             <ChevronDown className="h-3 w-3" />
@@ -434,26 +416,31 @@ export function ResultView({ videoUrl, recipientMessage, onCreateAnother }: Resu
           <div className="pt-1 space-y-1.5">
             <Button
               variant="ghost"
-              onClick={() => handleDownload("gif")}
+              onClick={() => handleDownload("mp4")}
               disabled={!!exporting || videoError}
               className="w-full gap-2 text-muted-foreground hover:text-foreground"
               size="sm"
             >
-              {exporting === "gif" ? (
+              {exporting === "mp4" ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Download className="h-4 w-4" />
               )}
-              {exportLabel("gif", "Download GIF (compatibility mode)")}
+              {exportLabel("mp4", "Download MP4")}
             </Button>
-            {errors.gif && (
-              <p className="text-[11px] text-destructive text-center">{errors.gif}</p>
+            {hasMessage && (
+              <p className="text-[11px] text-muted-foreground text-center px-2 leading-snug">
+                Note: the MP4 won't include your optional message overlay.
+              </p>
+            )}
+            {errors.mp4 && (
+              <p className="text-[11px] text-destructive text-center">{errors.mp4}</p>
             )}
           </div>
         )}
 
         <p className="text-[11px] text-muted-foreground text-center pt-1.5">
-          MP4 works everywhere. WebP is smaller. GIF is for legacy compatibility.
+          WebP is smaller and includes your message. GIF is for legacy compatibility.
         </p>
       </div>
 
