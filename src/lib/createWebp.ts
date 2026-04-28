@@ -239,6 +239,37 @@ function buildAnimatedWebp(width: number, height: number, frames: FrameInput[]):
 
 // ---------------------------------------------------------------------------
 
+// Resolve the encoder WASM URLs at build time so Vite emits real asset files.
+// Both the SIMD and non-SIMD variants ship in @jsquash/webp; we pick at runtime
+// based on `wasm-feature-detect`, mirroring the package's own logic.
+type WebpEncodeFn = (
+  data: ImageData,
+  options?: { quality?: number },
+) => Promise<ArrayBuffer>;
+
+let webpEncoderPromise: Promise<WebpEncodeFn> | null = null;
+
+async function loadWebpEncoder(): Promise<WebpEncodeFn> {
+  if (webpEncoderPromise) return webpEncoderPromise;
+  webpEncoderPromise = (async () => {
+    const [{ init, encode }, { simd }, simdWasmUrl, baseWasmUrl] = await Promise.all([
+      import("@jsquash/webp"),
+      import("wasm-feature-detect"),
+      import("@jsquash/webp/codec/enc/webp_enc_simd.wasm?url").then((m) => m.default),
+      import("@jsquash/webp/codec/enc/webp_enc.wasm?url").then((m) => m.default),
+    ]);
+    const useSimd = await simd();
+    const wasmUrl = useSimd ? simdWasmUrl : baseWasmUrl;
+    const wasmBinary = await fetch(wasmUrl).then((r) => {
+      if (!r.ok) throw new Error(`Failed to load WebP WASM (${r.status})`);
+      return r.arrayBuffer();
+    });
+    await init(undefined, { wasmBinary });
+    return encode as unknown as WebpEncodeFn;
+  })();
+  return webpEncoderPromise;
+}
+
 export async function createWebp(
   videoUrl: string,
   overlayText?: string | null,
