@@ -12,22 +12,46 @@
  */
 
 import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { toBlobURL } from "@ffmpeg/util";
 
 const FFMPEG_BASE = "/assets/ffmpeg";
+// Public CDN fallback — used when same-origin loading fails (e.g. the
+// Lovable preview domain redirects through an auth bridge for static assets,
+// which breaks the ffmpeg worker's importScripts call).
+const FFMPEG_CDN = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
 
 let ffmpegPromise: Promise<FFmpeg> | null = null;
+
+async function loadCoreBlobs(base: string) {
+  const [coreURL, wasmURL] = await Promise.all([
+    toBlobURL(`${base}/ffmpeg-core.js`, "text/javascript"),
+    toBlobURL(`${base}/ffmpeg-core.wasm`, "application/wasm"),
+  ]);
+  return { coreURL, wasmURL };
+}
 
 async function getFfmpeg(onLog?: (msg: string) => void): Promise<FFmpeg> {
   if (ffmpegPromise) return ffmpegPromise;
   ffmpegPromise = (async () => {
     const ffmpeg = new FFmpeg();
     ffmpeg.on("log", ({ message }) => onLog?.(message));
-    await ffmpeg.load({
-      coreURL: `${FFMPEG_BASE}/ffmpeg-core.js`,
-      wasmURL: `${FFMPEG_BASE}/ffmpeg-core.wasm`,
-    });
+
+    // Try same-origin first (fast, offline-friendly), fall back to CDN if the
+    // hosting environment redirects/blocks the static asset.
+    try {
+      const local = await loadCoreBlobs(FFMPEG_BASE);
+      await ffmpeg.load(local);
+    } catch (localErr) {
+      console.warn("ffmpeg local core load failed, falling back to CDN", localErr);
+      const cdn = await loadCoreBlobs(FFMPEG_CDN);
+      await ffmpeg.load(cdn);
+    }
     return ffmpeg;
   })();
+  ffmpegPromise.catch(() => {
+    // Reset so a later retry can attempt loading again.
+    ffmpegPromise = null;
+  });
   return ffmpegPromise;
 }
 
