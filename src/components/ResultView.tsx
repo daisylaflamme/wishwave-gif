@@ -11,11 +11,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { createGif } from "@/lib/createGif";
 import { createWebp } from "@/lib/createWebp";
-import { burnMessageIntoMp4 } from "@/lib/overlayMp4";
 import { toast } from "sonner";
 import { isNativeApp, nativeShare, openExternal, saveToDevice } from "@/lib/platform";
 
