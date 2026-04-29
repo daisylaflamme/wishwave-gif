@@ -1,7 +1,17 @@
-import { Sparkles, LogOut, LogIn } from "lucide-react";
+import { Sparkles, LogOut, LogIn, User as UserIcon, Receipt } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { CreditsBadge } from "@/components/CreditsBadge";
+import { isNativeApp } from "@/lib/platform";
 
 interface HeaderProps {
   onRequireSignIn?: () => void;
@@ -10,6 +20,7 @@ interface HeaderProps {
 
 export function Header({ onRequireSignIn, onBuyCredits }: HeaderProps) {
   const { user, signOut } = useAuth();
+  const native = isNativeApp();
 
   return (
     <header className="w-full px-4 sm:px-6 pt-safe pb-8 sm:pb-12">
@@ -20,15 +31,30 @@ export function Header({ onRequireSignIn, onBuyCredits }: HeaderProps) {
         <div className="flex flex-wrap items-center justify-end gap-2">
           {user && onBuyCredits && <CreditsBadge onBuyClick={onBuyCredits} />}
           {user ? (
-            <>
-              <span className="hidden md:inline text-sm text-muted-foreground truncate max-w-[160px]">
-                {user.email}
-              </span>
-              <Button variant="ghost" size="sm" onClick={signOut} className="gap-1.5">
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Sign out</span>
-              </Button>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-1.5">
+                  <UserIcon className="h-4 w-4" />
+                  <span className="hidden sm:inline truncate max-w-[140px]">{user.email}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {!native && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/payment-history" className="cursor-pointer gap-2">
+                      <Receipt className="h-4 w-4" />
+                      Payment History
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={signOut} className="cursor-pointer gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             onRequireSignIn && (
               <Button variant="ghost" size="sm" onClick={onRequireSignIn} className="gap-1.5">
