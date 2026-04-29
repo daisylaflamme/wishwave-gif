@@ -379,7 +379,6 @@ const Index = () => {
           </div>
 
           <GenerationHistory onSelect={(gen) => setResult(gen)} />
-          {!native && <PurchaseHistory />}
         </main>
         <Footer />
       </div>
