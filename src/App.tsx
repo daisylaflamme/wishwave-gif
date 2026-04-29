@@ -12,6 +12,8 @@ import Index from "./pages/Index.tsx";
 const Auth = lazy(() => import("./pages/Auth.tsx"));
 const Legal = lazy(() => import("./pages/Legal.tsx"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess.tsx"));
+const PaymentCancel = lazy(() => import("./pages/PaymentCancel.tsx"));
+const PaymentHistory = lazy(() => import("./pages/PaymentHistory.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 const queryClient = new QueryClient();
@@ -73,6 +75,14 @@ const App = () => (
               <Route
                 path="/payment-success"
                 element={isNativeApp() ? <Navigate to="/" replace /> : <PaymentSuccess />}
+              />
+              <Route
+                path="/payment-cancel"
+                element={isNativeApp() ? <Navigate to="/" replace /> : <PaymentCancel />}
+              />
+              <Route
+                path="/payment-history"
+                element={isNativeApp() ? <Navigate to="/" replace /> : <PaymentHistory />}
               />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

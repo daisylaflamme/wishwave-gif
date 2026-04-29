@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ImageUpload } from "@/components/ImageUpload";
@@ -14,7 +15,6 @@ const PricingModal = lazy(() =>
   import("@/components/PricingModal").then((m) => ({ default: m.PricingModal }))
 );
 import { SupportChatButton } from "@/components/support/SupportChatButton";
-import { PurchaseHistory } from "@/components/PurchaseHistory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -379,7 +379,6 @@ const Index = () => {
           </div>
 
           <GenerationHistory onSelect={(gen) => setResult(gen)} />
-          {!native && <PurchaseHistory />}
         </main>
         <Footer />
       </div>
