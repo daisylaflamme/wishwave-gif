@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { getPlatform, isNativeApp } from "@/lib/platform";
 
 export type ChatMsg = { role: "user" | "assistant"; content: string };
 
@@ -64,7 +65,12 @@ export function useSupportChat() {
           },
           body: JSON.stringify({
             messages: next,
-            context: { signedIn: opts.signedIn, credits: opts.credits },
+            context: {
+              signedIn: opts.signedIn,
+              credits: opts.credits,
+              platform: getPlatform(),
+              isNative: isNativeApp(),
+            },
           }),
           signal: controller.signal,
         });
