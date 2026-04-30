@@ -7,7 +7,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { isNativeApp } from "@/lib/platform";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index.tsx";
+
+const NATIVE_AUTH_CALLBACK_PREFIX = "gifspark://auth/callback";
 
 const Auth = lazy(() => import("./pages/Auth.tsx"));
 const Legal = lazy(() => import("./pages/Legal.tsx"));
@@ -30,14 +33,38 @@ function NativeShell() {
     (async () => {
       try {
         const { App: CapApp } = await import("@capacitor/app");
-        const sub = await CapApp.addListener("backButton", () => {
+        const backSub = await CapApp.addListener("backButton", () => {
           if (location.pathname === "/") {
             CapApp.exitApp();
           } else {
             navigate(-1);
           }
         });
-        cleanups.push(() => sub.remove());
+        cleanups.push(() => backSub.remove());
+
+        // Deep-link handler: completes Google OAuth started in the in-app browser.
+        const urlSub = await CapApp.addListener("appUrlOpen", async ({ url }) => {
+          if (!url?.startsWith(NATIVE_AUTH_CALLBACK_PREFIX)) return;
+          try {
+            const hash = url.split("#")[1] ?? "";
+            const params = new URLSearchParams(hash);
+            const access_token = params.get("access_token");
+            const refresh_token = params.get("refresh_token");
+            if (access_token && refresh_token) {
+              await supabase.auth.setSession({ access_token, refresh_token });
+            }
+          } catch (e) {
+            console.warn("Failed to set session from deep link", e);
+          }
+          try {
+            const { Browser } = await import("@capacitor/browser");
+            await Browser.close();
+          } catch {
+            /* browser plugin optional */
+          }
+          navigate("/", { replace: true });
+        });
+        cleanups.push(() => urlSub.remove());
       } catch (e) {
         console.warn("Capacitor App plugin unavailable", e);
       }
