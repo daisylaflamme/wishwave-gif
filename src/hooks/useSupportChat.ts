@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { getPlatform, isNativeApp } from "@/lib/platform";
 
 export type ChatMsg = { role: "user" | "assistant"; content: string };
 
