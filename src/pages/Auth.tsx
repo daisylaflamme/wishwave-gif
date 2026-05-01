@@ -2,11 +2,11 @@ import { useEffect } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2 } from "lucide-react";
-import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isNativeApp } from "@/lib/platform";
+import { signInWithManagedGoogle } from "@/lib/managedGoogleAuth";
 
 const NATIVE_CALLBACK_SCHEME = "gifspark://auth/callback";
 const WEB_AUTH_URL = "https://gifspark.lovable.app/auth?native=1";
@@ -56,7 +56,7 @@ export default function Auth() {
       return;
     }
 
-    const result = await lovable.auth.signInWithOAuth("google", {
+    const result = await signInWithManagedGoogle({
       redirect_uri: window.location.origin,
     });
     if (result.error) {
