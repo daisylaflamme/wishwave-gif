@@ -1,7 +1,7 @@
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 
-const PUBLISHED_ORIGIN = "https://gifspark.lovable.app";
+const DEV_OAUTH_ORIGIN = "https://id-preview--5f66f100-340b-4e24-8685-8eadea090d4c.lovable.app";
 const OAUTH_MESSAGE_ORIGINS = new Set(["https://oauth.lovable.app", "https://lovable.dev"]);
 const EXPECTED_MESSAGE_TYPE = "authorization_response";
 const POPUP_CHECK_INTERVAL_MS = 500;
@@ -43,11 +43,11 @@ async function signInWithLocalDevPopup(extraParams?: Record<string, string>): Pr
   const params = new URLSearchParams({
     ...extraParams,
     provider: "google",
-    redirect_uri: PUBLISHED_ORIGIN,
+    redirect_uri: DEV_OAUTH_ORIGIN,
     response_mode: "web_message",
     state,
   });
-  const popup = window.open(`${PUBLISHED_ORIGIN}/~oauth/initiate?${params.toString()}`, "oauth", getPopupFeatures());
+  const popup = window.open(`${DEV_OAUTH_ORIGIN}/~oauth/initiate?${params.toString()}`, "oauth", getPopupFeatures());
 
   if (!popup) return { error: new Error("Popup was blocked") };
 
