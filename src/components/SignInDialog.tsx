@@ -8,10 +8,10 @@ import {
 } from "@/components/ui/dialog";
 import { Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import { lovable } from "@/integrations/lovable/index";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
+import { signInWithManagedGoogle } from "@/lib/managedGoogleAuth";
 
 interface SignInDialogProps {
   open: boolean;
@@ -28,7 +28,7 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
   }, [open, user, onOpenChange]);
 
   const handleGoogle = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", {
+    const result = await signInWithManagedGoogle({
       redirect_uri: window.location.origin,
     });
     if (result.error) {
