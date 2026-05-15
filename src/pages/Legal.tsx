@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import {
   ArrowLeft,
   Shield,
@@ -17,6 +18,14 @@ const SUPPORT_EMAIL = "administrator@daisylaflamme.net";
 const Legal = () => {
   return (
     <div className="min-h-screen bg-gradient-soft">
+      <Helmet>
+        <title>Trust & Safety — GifSpark</title>
+        <meta name="description" content="How GifSpark handles consent, privacy, AI disclosure, and abuse reporting for animated photos." />
+        <link rel="canonical" href="https://gifspark.lovable.app/legal" />
+        <meta property="og:title" content="Trust & Safety — GifSpark" />
+        <meta property="og:description" content="Consent, privacy, AI disclosure, and abuse reporting at GifSpark." />
+        <meta property="og:url" content="https://gifspark.lovable.app/legal" />
+      </Helmet>
       <main className="container max-w-3xl mx-auto px-4 py-10">
         <Button asChild variant="ghost" size="sm" className="mb-6 gap-1.5">
           <Link to="/">

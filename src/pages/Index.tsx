@@ -215,6 +215,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen relative bg-gradient-soft">
+      <Helmet>
+        <title>GifSpark — Animate your photos in seconds</title>
+        <meta name="description" content="Turn any portrait into a shareable animated photo. Download as MP4, animated WebP, or GIF. AI-powered, ready in seconds." />
+        <link rel="canonical" href="https://gifspark.lovable.app/" />
+        <meta property="og:title" content="GifSpark — Animate your photos in seconds" />
+        <meta property="og:description" content="Turn any portrait into a shareable animated photo. Download as MP4, animated WebP, or GIF." />
+        <meta property="og:url" content="https://gifspark.lovable.app/" />
+      </Helmet>
       <ConfettiBackground />
       <div className="relative z-10">
         <Header
