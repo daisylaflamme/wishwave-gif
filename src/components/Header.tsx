@@ -33,7 +33,12 @@ export function Header({ onRequireSignIn, onBuyCredits }: HeaderProps) {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-1.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5"
+                  aria-label={`Account menu for ${user.email ?? "your account"}`}
+                >
                   <UserIcon className="h-4 w-4" />
                   <span className="hidden sm:inline truncate max-w-[140px]">{user.email}</span>
                 </Button>
@@ -71,7 +76,8 @@ export function Header({ onRequireSignIn, onBuyCredits }: HeaderProps) {
         <div className="flex items-center justify-center gap-2 mb-3">
           <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            GifSpark
+            <span>GifSpark</span>
+            <span className="sr-only"> — Animated photos from portraits</span>
           </h1>
           <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
         </div>

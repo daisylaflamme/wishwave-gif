@@ -76,7 +76,7 @@ export function ImageUpload({ onImageSelect, selectedImage, onClear, onAdjust, o
   if (selectedImage && preview) {
     return (
       <div className="relative rounded-lg overflow-hidden border-2 border-primary/20 max-w-sm mx-auto">
-        <img src={preview} alt="Selected" className="w-full aspect-video object-cover" />
+        <img src={preview} alt="Preview of your uploaded photo" className="w-full aspect-video object-cover" />
         <div className="absolute top-2 right-2 flex gap-2">
           {onAdjust && (
             <Button
