@@ -255,7 +255,7 @@ const Index = () => {
               </h2>
 
               <div className="space-y-1.5 max-w-xs">
-                <label className="text-sm font-medium text-foreground flex items-center justify-between gap-2">
+                <label htmlFor="recipient-message" className="text-sm font-medium text-foreground flex items-center justify-between gap-2">
                   <span>
                     Short Message <span className="text-muted-foreground">(optional)</span>
                   </span>
@@ -272,6 +272,7 @@ const Index = () => {
                   </span>
                 </label>
                 <Input
+                  id="recipient-message"
                   placeholder="Add a message (e.g., Happy Birthday!)"
                   value={recipientMessage}
                   onChange={(e) => setRecipientMessage(e.target.value.slice(0, 80))}
@@ -309,7 +310,7 @@ const Index = () => {
                     to="/legal#consent"
                     className="text-primary underline underline-offset-2 hover:opacity-80"
                   >
-                    Learn more
+                    Learn more about image consent
                   </Link>
                 </span>
               </label>

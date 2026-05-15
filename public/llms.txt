@@ -1,0 +1,14 @@
+# GifSpark
+
+> GifSpark turns any portrait into a shareable animated photo — a short looping video you can send anywhere. AI-powered, ready in seconds.
+
+GifSpark is a web app that takes a single portrait photo and animates it with a short motion style (wave, smile, dance, and more). The result is delivered as MP4, animated WebP, or GIF.
+
+## Pages
+
+- [Home](/): Upload a portrait and generate an animated photo.
+- [Trust & Safety](/legal): Consent, privacy, AI disclosure, and abuse reporting.
+
+## Optional
+
+- [Sign in](/auth): Account sign-in page.
