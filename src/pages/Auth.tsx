@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,11 +71,21 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-soft px-4">
+      <Helmet>
+        <title>Sign in to GifSpark</title>
+        <meta name="description" content="Sign in to GifSpark to turn your portraits into animated photos and short videos." />
+        <link rel="canonical" href="https://gifspark.lovable.app/auth" />
+        <meta name="robots" content="noindex" />
+        <meta property="og:title" content="Sign in to GifSpark" />
+        <meta property="og:description" content="Sign in to GifSpark to turn your portraits into animated photos." />
+        <meta property="og:url" content="https://gifspark.lovable.app/auth" />
+      </Helmet>
       <div className="w-full max-w-md bg-card rounded-2xl shadow-lg border p-8 text-center space-y-6">
         <div className="flex items-center justify-center gap-2">
           <Sparkles className="h-7 w-7 text-primary" />
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            GifSpark
+            <span>GifSpark</span>
+            <span className="sr-only"> — Sign in</span>
           </h1>
         </div>
         <div className="space-y-2">
