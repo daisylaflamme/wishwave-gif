@@ -78,6 +78,9 @@ const Index = () => {
   useEffect(() => {
     sessionStorage.setItem(FRAME_STORAGE_KEY, frameStyle);
   }, [frameStyle]);
+  useEffect(() => {
+    sessionStorage.setItem(CUSTOM_PROMPT_STORAGE_KEY, customPrompt);
+  }, [customPrompt]);
   const { status, error, result, generate, reset, setResult } = useGeneration();
   const { user } = useAuth();
   const { credits, loading: creditsLoading } = useCredits();
