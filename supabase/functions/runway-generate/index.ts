@@ -56,14 +56,17 @@ const MOTION_CONFIG: Record<string, MotionConfig> = {
     multi: ALL_PEOPLE,
     mouthClosed: true,
   },
-
-  laugh: {
-    action:
-      "ACTION: Natural happy laugh expression. Smile widens, shoulders move slightly, head moves subtly. No speaking or forming words.",
-    multi: ALL_PEOPLE,
-    mouthClosed: false,
-  },
 };
+
+const CUSTOM_MOTION_MAX = 100;
+const CUSTOM_BLOCKED_WORDS = [
+  "zoom", "cinematic", "anime", "cartoon", "background",
+  "new person", "extra people", "weapon", "explode", "naked", "remove clothes",
+];
+
+function buildCustomAction(userPrompt: string): string {
+  return `Subtle realistic motion only: ${userPrompt}. Preserve identity, framing, clothing, background, and facial consistency. No new people, objects, text, camera movement, or scene changes.`;
+}
 
 const FRAME_FRAGMENTS: Record<string, string> = {
   celebrate: "festive birthday-style confetti and sparkle",
@@ -86,11 +89,12 @@ function buildFrameSentence(frameStyle?: string): string | null {
  * Priority (most → least important): ACTION, mouth-closed rule, multi-people rule, base scene rules, optional frame overlay.
  * Drops lowest-priority sentences first; never cuts mid-sentence.
  */
-function buildPrompt(motion: string, frameStyle?: string): string {
+function buildPrompt(motion: string, frameStyle?: string, customAction?: string): string {
   const cfg = MOTION_CONFIG[motion] ?? MOTION_CONFIG.wave;
-  const parts: string[] = [cfg.action];
-  if (cfg.mouthClosed) parts.push(MOUTH_CLOSED);
-  parts.push(cfg.multi);
+  const action = customAction ?? cfg.action;
+  const parts: string[] = [action];
+  if (motion !== "custom" && cfg.mouthClosed) parts.push(MOUTH_CLOSED);
+  parts.push(ALL_PEOPLE);
   parts.push(PROMPT_BASE);
   const frame = buildFrameSentence(frameStyle);
   if (frame) parts.push(frame);
@@ -99,8 +103,6 @@ function buildPrompt(motion: string, frameStyle?: string): string {
     const candidate = parts.slice(0, count).join(" ").trim();
     if (candidate.length <= RUNWAY_PROMPT_MAX) return candidate;
   }
-  // Fallback: hard-truncate the action at the last sentence boundary under the limit.
-  const action = parts[0];
   const sliced = action.slice(0, RUNWAY_PROMPT_MAX);
   const lastStop = Math.max(sliced.lastIndexOf("."), sliced.lastIndexOf("!"), sliced.lastIndexOf("?"));
   return (lastStop > 0 ? sliced.slice(0, lastStop + 1) : sliced).trim();
@@ -134,6 +136,66 @@ serve(async (req) => {
     }
     const userId = userData.user.id;
 
+    const RUNWAY_API_KEY = Deno.env.get("RUNWAY_API_KEY");
+    if (!RUNWAY_API_KEY) {
+      return new Response(JSON.stringify({ error: "RUNWAY_API_KEY is not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { imageUrl, motionStyle, frameStyle, customPrompt } = await req.json();
+
+    if (!imageUrl || typeof imageUrl !== "string") {
+      return new Response(JSON.stringify({ error: "imageUrl is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate imageUrl originates from this user's own folder in wishwave-uploads.
+    const baseUrl = supabaseUrl.replace(/\/$/, "");
+    const publicPrefix = `${baseUrl}/storage/v1/object/public/wishwave-uploads/${userId}/`;
+    const signedPrefix = `${baseUrl}/storage/v1/object/sign/wishwave-uploads/${userId}/`;
+    if (!imageUrl.startsWith(publicPrefix) && !imageUrl.startsWith(signedPrefix)) {
+      console.error("runway-generate: rejected imageUrl from disallowed origin:", imageUrl);
+      return new Response(JSON.stringify({ error: "imageUrl must be a photo you uploaded in this app" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const isCustom = motionStyle === "custom";
+    let customAction: string | undefined;
+    if (isCustom) {
+      const raw = typeof customPrompt === "string" ? customPrompt.trim() : "";
+      if (!raw) {
+        return new Response(JSON.stringify({ error: "Please describe the motion you want." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (raw.length > CUSTOM_MOTION_MAX) {
+        return new Response(JSON.stringify({ error: `Custom motion must be under ${CUSTOM_MOTION_MAX} characters.` }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const lowered = raw.toLowerCase();
+      if (CUSTOM_BLOCKED_WORDS.some((w) => lowered.includes(w))) {
+        return new Response(JSON.stringify({ error: "Please describe only subtle motion for the existing photo." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      customAction = buildCustomAction(raw);
+    }
+
+    const selectedMotion = isCustom
+      ? "custom"
+      : (typeof motionStyle === "string" && MOTION_CONFIG[motionStyle] ? motionStyle : "wave");
+    const selectedFrame = typeof frameStyle === "string" ? frameStyle : "none";
+
     // --- Consume one credit (atomic, server-side) ---
     const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: consumed, error: consumeErr } = await serviceClient.rpc("consume_credit", {
@@ -153,39 +215,7 @@ serve(async (req) => {
       });
     }
 
-    const RUNWAY_API_KEY = Deno.env.get("RUNWAY_API_KEY");
-    if (!RUNWAY_API_KEY) {
-      return new Response(JSON.stringify({ error: "RUNWAY_API_KEY is not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { imageUrl, motionStyle, frameStyle } = await req.json();
-
-    if (!imageUrl || typeof imageUrl !== "string") {
-      return new Response(JSON.stringify({ error: "imageUrl is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Validate imageUrl originates from this user's own folder in wishwave-uploads.
-    // Accept either public URLs or signed URLs (since the bucket is private).
-    const baseUrl = supabaseUrl.replace(/\/$/, "");
-    const publicPrefix = `${baseUrl}/storage/v1/object/public/wishwave-uploads/${userId}/`;
-    const signedPrefix = `${baseUrl}/storage/v1/object/sign/wishwave-uploads/${userId}/`;
-    if (!imageUrl.startsWith(publicPrefix) && !imageUrl.startsWith(signedPrefix)) {
-      console.error("runway-generate: rejected imageUrl from disallowed origin:", imageUrl);
-      return new Response(JSON.stringify({ error: "imageUrl must be a photo you uploaded in this app" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const selectedMotion = typeof motionStyle === "string" && MOTION_CONFIG[motionStyle] ? motionStyle : "wave";
-    const selectedFrame = typeof frameStyle === "string" ? frameStyle : "none";
-    const prompt = buildPrompt(selectedMotion, selectedFrame);
+    const prompt = buildPrompt(selectedMotion, selectedFrame, customAction);
     console.log(`runway-generate: motionStyle=${motionStyle} frameStyle=${selectedFrame} → using=${selectedMotion} promptLen=${prompt.length}`);
 
     const response = await fetch("https://api.dev.runwayml.com/v1/image_to_video", {

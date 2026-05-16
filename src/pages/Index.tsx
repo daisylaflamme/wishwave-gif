@@ -20,8 +20,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
-import { MOTION_STYLES, FRAME_STYLES } from "@/lib/constants";
+import { MOTION_STYLES, FRAME_STYLES, CUSTOM_MOTION_MAX, validateCustomMotion } from "@/lib/constants";
 import type { MotionStyle, FrameStyle } from "@/lib/constants";
+import { Textarea } from "@/components/ui/textarea";
 import { useGeneration } from "@/hooks/useGeneration";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
@@ -36,6 +37,7 @@ const WEB_APP_URL = "https://gifspark.lovable.app";
 const MOTION_STORAGE_KEY = "wishwave:motionStyle";
 const RECIPIENT_STORAGE_KEY = "wishwave:recipientMessage";
 const FRAME_STORAGE_KEY = "wishwave:frameStyle";
+const CUSTOM_PROMPT_STORAGE_KEY = "wishwave:customMotionPrompt";
 
 const Index = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(() => uploadCache.get().file);
@@ -59,6 +61,12 @@ const Index = () => {
   const [signInOpen, setSignInOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [consent, setConsent] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState(
+    () => (typeof window !== "undefined" && sessionStorage.getItem(CUSTOM_PROMPT_STORAGE_KEY)) || "",
+  );
+  const customPromptError = motionStyle === "custom" && customPrompt.length > 0
+    ? validateCustomMotion(customPrompt)
+    : null;
 
   // Persist motion + message across navigation (e.g. visiting /legal)
   useEffect(() => {
@@ -70,6 +78,9 @@ const Index = () => {
   useEffect(() => {
     sessionStorage.setItem(FRAME_STORAGE_KEY, frameStyle);
   }, [frameStyle]);
+  useEffect(() => {
+    sessionStorage.setItem(CUSTOM_PROMPT_STORAGE_KEY, customPrompt);
+  }, [customPrompt]);
   const { status, error, result, generate, reset, setResult } = useGeneration();
   const { user } = useAuth();
   const { credits, loading: creditsLoading } = useCredits();
@@ -178,7 +189,14 @@ const Index = () => {
       });
       return;
     }
-    generate(selectedImage, recipientMessage, motionStyle, frameStyle);
+    if (motionStyle === "custom") {
+      const err = validateCustomMotion(customPrompt);
+      if (err) {
+        toast({ variant: "destructive", title: "Check your custom motion", description: err });
+        return;
+      }
+    }
+    generate(selectedImage, recipientMessage, motionStyle, frameStyle, motionStyle === "custom" ? customPrompt : undefined);
   };
 
   const handleCreateAnother = () => {
@@ -189,10 +207,12 @@ const Index = () => {
     setMotionStyle("wave");
     setFrameStyle("none");
     setConsent(false);
+    setCustomPrompt("");
     uploadCache.clear();
     sessionStorage.removeItem(MOTION_STORAGE_KEY);
     sessionStorage.removeItem(RECIPIENT_STORAGE_KEY);
     sessionStorage.removeItem(FRAME_STORAGE_KEY);
+    sessionStorage.removeItem(CUSTOM_PROMPT_STORAGE_KEY);
     reset();
   };
 
@@ -313,6 +333,41 @@ const Index = () => {
                 onChange={(v) => setMotionStyle(v as MotionStyle)}
               />
 
+              {motionStyle === "custom" && (
+                <div className="space-y-1.5">
+                  <label htmlFor="custom-motion" className="text-sm font-medium text-foreground flex items-center justify-between gap-2">
+                    <span>Custom motion</span>
+                    <span
+                      className={`text-[11px] tabular-nums ${
+                        customPrompt.length >= CUSTOM_MOTION_MAX
+                          ? "text-destructive"
+                          : customPrompt.length > CUSTOM_MOTION_MAX * 0.8
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-muted-foreground"
+                      }`}
+                    >
+                      {customPrompt.length}/{CUSTOM_MOTION_MAX}
+                    </span>
+                  </label>
+                  <Textarea
+                    id="custom-motion"
+                    placeholder="Example: gentle smile and wave at camera"
+                    value={customPrompt}
+                    onChange={(e) => setCustomPrompt(e.target.value.slice(0, CUSTOM_MOTION_MAX))}
+                    maxLength={CUSTOM_MOTION_MAX}
+                    rows={2}
+                    aria-describedby="custom-motion-help"
+                  />
+                  {customPromptError ? (
+                    <p className="text-[11px] text-destructive">{customPromptError}</p>
+                  ) : (
+                    <p id="custom-motion-help" className="text-[11px] text-muted-foreground">
+                      Describe subtle realistic motion only.
+                    </p>
+                  )}
+                </div>
+              )}
+
               <StyleSelector
                 label="Choose a frame vibe (optional)"
                 options={FRAME_STYLES}
@@ -350,7 +405,7 @@ const Index = () => {
                 size="lg"
                 className="w-full text-lg h-14 gap-2 rounded-xl"
                 onClick={handleGenerate}
-                disabled={status !== "idle" || (!!user && !selectedImage) || noCredits || (!!selectedImage && !consent)}
+                disabled={status !== "idle" || (!!user && !selectedImage) || noCredits || (!!selectedImage && !consent) || (motionStyle === "custom" && (!customPrompt.trim() || !!customPromptError))}
               >
                 <Wand2 className="h-5 w-5" />
                 Animate Photo
