@@ -189,7 +189,14 @@ const Index = () => {
       });
       return;
     }
-    generate(selectedImage, recipientMessage, motionStyle, frameStyle);
+    if (motionStyle === "custom") {
+      const err = validateCustomMotion(customPrompt);
+      if (err) {
+        toast({ variant: "destructive", title: "Check your custom motion", description: err });
+        return;
+      }
+    }
+    generate(selectedImage, recipientMessage, motionStyle, frameStyle, motionStyle === "custom" ? customPrompt : undefined);
   };
 
   const handleCreateAnother = () => {
@@ -200,10 +207,12 @@ const Index = () => {
     setMotionStyle("wave");
     setFrameStyle("none");
     setConsent(false);
+    setCustomPrompt("");
     uploadCache.clear();
     sessionStorage.removeItem(MOTION_STORAGE_KEY);
     sessionStorage.removeItem(RECIPIENT_STORAGE_KEY);
     sessionStorage.removeItem(FRAME_STORAGE_KEY);
+    sessionStorage.removeItem(CUSTOM_PROMPT_STORAGE_KEY);
     reset();
   };
 
