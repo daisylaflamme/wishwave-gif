@@ -61,6 +61,12 @@ const Index = () => {
   const [signInOpen, setSignInOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [consent, setConsent] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState(
+    () => (typeof window !== "undefined" && sessionStorage.getItem(CUSTOM_PROMPT_STORAGE_KEY)) || "",
+  );
+  const customPromptError = motionStyle === "custom" && customPrompt.length > 0
+    ? validateCustomMotion(customPrompt)
+    : null;
 
   // Persist motion + message across navigation (e.g. visiting /legal)
   useEffect(() => {
