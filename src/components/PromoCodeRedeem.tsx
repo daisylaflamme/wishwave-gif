@@ -35,9 +35,7 @@ export function PromoCodeRedeem() {
         { body: { code: trimmed } },
       );
       if (invokeError) {
-        // Try to surface server error message
-        // @ts-expect-error context exists on FunctionsHttpError
-        const ctx = invokeError.context;
+        const ctx = (invokeError as unknown as { context?: Response }).context;
         let msg = invokeError.message || "Something went wrong.";
         try {
           const parsed = ctx ? await ctx.json() : null;
