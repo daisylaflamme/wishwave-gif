@@ -67,6 +67,9 @@ const Index = () => {
   useEffect(() => {
     sessionStorage.setItem(RECIPIENT_STORAGE_KEY, recipientMessage);
   }, [recipientMessage]);
+  useEffect(() => {
+    sessionStorage.setItem(FRAME_STORAGE_KEY, frameStyle);
+  }, [frameStyle]);
   const { status, error, result, generate, reset, setResult } = useGeneration();
   const { user } = useAuth();
   const { credits, loading: creditsLoading } = useCredits();
