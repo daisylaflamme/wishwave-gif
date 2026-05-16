@@ -36,7 +36,7 @@ serve(async (req) => {
     const userId = userData.user.id;
     const userEmail = userData.user.email;
 
-    const { priceId, returnUrl, environment } = await req.json();
+    const { priceId, returnUrl } = await req.json();
     if (!priceId || typeof priceId !== "string" || !/^[a-zA-Z0-9_-]+$/.test(priceId)) {
       return new Response(JSON.stringify({ error: "Invalid priceId" }), {
         status: 400,
@@ -44,7 +44,9 @@ serve(async (req) => {
       });
     }
 
-    const env = (environment || "sandbox") as StripeEnv;
+    // Environment is determined server-side only. Never trust the client.
+    const activeEnv = (Deno.env.get("STRIPE_ACTIVE_ENV") || "sandbox").toLowerCase();
+    const env = (activeEnv === "live" ? "live" : "sandbox") as StripeEnv;
     const stripe = createStripeClient(env);
 
     const prices = await stripe.prices.list({ lookup_keys: [priceId] });

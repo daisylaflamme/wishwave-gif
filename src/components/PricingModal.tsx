@@ -3,7 +3,7 @@ import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, Sparkles, Loader2, Zap, Lock } from "lucide-react";
-import { getStripe, getStripeEnvironment } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
@@ -56,9 +56,6 @@ export function PricingModal({ open, onOpenChange }: PricingModalProps) {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: {
           priceId: selectedPriceId,
-          userId: user?.id,
-          customerEmail: user?.email,
-          environment: getStripeEnvironment(),
           returnUrl: `${window.location.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
         },
       });

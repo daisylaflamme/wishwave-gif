@@ -17,8 +17,8 @@ const CREDIT_PACKAGES: Record<string, { credits: number; name: string }> = {
 serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
-  const url = new URL(req.url);
-  const env = (url.searchParams.get("env") || "sandbox") as StripeEnv;
+  const activeEnv = (Deno.env.get("STRIPE_ACTIVE_ENV") || "sandbox").toLowerCase();
+  const env = (activeEnv === "live" ? "live" : "sandbox") as StripeEnv;
 
   let event: { id: string; type: string; data: { object: any } };
   try {
