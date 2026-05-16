@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.redeem_promo_code(uuid, text) TO service_role;
