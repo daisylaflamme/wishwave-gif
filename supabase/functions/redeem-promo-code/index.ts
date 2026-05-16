@@ -53,17 +53,11 @@ Deno.serve(async (req) => {
       return json({ error: ERROR_MESSAGES.invalid }, 400);
     }
 
-    // Service-role client to call the SECURITY DEFINER function
+    // Service-role client — must NOT carry the user JWT, or PostgREST
+    // downgrades the role to `authenticated` and the RPC EXECUTE check fails.
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // Set the auth context so auth.uid() works inside the function.
-    // The function checks auth.uid() = _user_id; service role bypasses RLS,
-    // but auth.uid() returns null. We pass the user JWT via headers on the rpc.
-    const adminAsUser = createClient(SUPABASE_URL, SERVICE_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data, error } = await adminAsUser.rpc("redeem_promo_code", {
+    const { data, error } = await admin.rpc("redeem_promo_code", {
       _user_id: userId,
       _code: code,
     });
