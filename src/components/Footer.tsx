@@ -8,7 +8,10 @@ export function Footer() {
   };
 
   return (
-    <footer className="border-t border-border/50 mt-8 px-4 py-8 pb-safe">
+    <footer
+      className="border-t border-border/50 mt-8 px-4 pt-8"
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 2rem)" }}
+    >
       <div className="container max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-3 text-xs text-muted-foreground min-h-[3rem]">
         <span>© {new Date().getFullYear()} GifSpark</span>
         <span aria-hidden>·</span>
