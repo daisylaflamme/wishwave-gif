@@ -56,9 +56,6 @@ export function PricingModal({ open, onOpenChange }: PricingModalProps) {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: {
           priceId: selectedPriceId,
-          userId: user?.id,
-          customerEmail: user?.email,
-          environment: getStripeEnvironment(),
           returnUrl: `${window.location.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
         },
       });
