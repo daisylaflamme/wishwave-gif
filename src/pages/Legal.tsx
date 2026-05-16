@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const SUPPORT_EMAIL = "administrator@daisylaflamme.net";
+const SUPPORT_EMAIL = "administrator@daisylaflamme.com";
 
 const Legal = () => {
   return (
