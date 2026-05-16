@@ -65,17 +65,35 @@ const MOTION_CONFIG: Record<string, MotionConfig> = {
   },
 };
 
+const FRAME_FRAGMENTS: Record<string, string> = {
+  celebrate: "festive birthday-style confetti and sparkle",
+  elegant: "minimal gold and soft luxury",
+  soft: "pastel glow and delicate light",
+  love: "soft romantic hearts and warm glow",
+  retro: "playful retro film or polaroid-inspired",
+  cozy: "warm rustic paper, wood, or autumn-inspired",
+};
+
+function buildFrameSentence(frameStyle?: string): string | null {
+  if (!frameStyle || frameStyle === "none") return null;
+  const f = FRAME_FRAGMENTS[frameStyle];
+  if (!f) return null;
+  return `Add a subtle decorative ${f} frame overlay only around the outer edges. Do not cover faces, bodies, hands, or important photo content. Do not add text, props, people, or background elements. Keep the original image framing unchanged.`;
+}
+
 /**
  * Build a Runway prompt guaranteed to fit under RUNWAY_PROMPT_MAX.
- * Priority (most → least important): ACTION, mouth-closed rule, multi-people rule, base scene rules.
+ * Priority (most → least important): ACTION, mouth-closed rule, multi-people rule, base scene rules, optional frame overlay.
  * Drops lowest-priority sentences first; never cuts mid-sentence.
  */
-function buildPrompt(motion: string): string {
+function buildPrompt(motion: string, frameStyle?: string): string {
   const cfg = MOTION_CONFIG[motion] ?? MOTION_CONFIG.wave;
   const parts: string[] = [cfg.action];
   if (cfg.mouthClosed) parts.push(MOUTH_CLOSED);
   parts.push(cfg.multi);
   parts.push(PROMPT_BASE);
+  const frame = buildFrameSentence(frameStyle);
+  if (frame) parts.push(frame);
 
   for (let count = parts.length; count >= 1; count--) {
     const candidate = parts.slice(0, count).join(" ").trim();
