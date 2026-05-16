@@ -23,7 +23,7 @@ export function useGeneration() {
   const queryClient = useQueryClient();
 
   const generate = useCallback(
-    async (file: File, recipientMessage: string, motionStyle: MotionStyle) => {
+    async (file: File, recipientMessage: string, motionStyle: MotionStyle, frameStyle: FrameStyle = "none") => {
       setState({ status: "uploading", error: null, result: null });
 
       try {
