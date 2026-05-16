@@ -318,6 +318,7 @@ const Index = () => {
                 options={FRAME_STYLES}
                 value={frameStyle}
                 onChange={(v) => setFrameStyle(v as FrameStyle)}
+                compact
               />
             </div>
 
