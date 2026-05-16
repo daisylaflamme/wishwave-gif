@@ -11,7 +11,7 @@ const RUNWAY_PROMPT_MAX = 1000;
 
 // Shared identity/camera/scene constraints prepended to every prompt.
 const PROMPT_BASE =
-  "Animate only the original uploaded photo. Preserve the same person or people, face identity, hair, clothing, body, background, and camera framing. Do not add people, faces, bodies, hands, props, text, or background characters. Do not duplicate anyone. No zoom, crop, pan, or frame extension. Keep motion subtle, realistic, stable, and contained in the original frame.";
+  "Animate only the uploaded photo. Preserve the same people, faces, hair, clothing, bodies, background, and framing. Do not add or duplicate people, faces, hands, props, or text. No zoom, crop, pan, or extension. Keep motion subtle, stable, and realistic. Enhance faces to appear slightly more youthful and flattering, natural and consistent.";
 
 const MOUTH_CLOSED = "Mouth stays closed. No talking, no lip-sync, no words.";
 
@@ -63,7 +63,6 @@ const MOTION_CONFIG: Record<string, MotionConfig> = {
     multi: ALL_PEOPLE,
     mouthClosed: false,
   },
-
 };
 
 /**
