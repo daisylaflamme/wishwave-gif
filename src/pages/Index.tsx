@@ -35,6 +35,7 @@ const WEB_APP_URL = "https://gifspark.lovable.app";
 
 const MOTION_STORAGE_KEY = "wishwave:motionStyle";
 const RECIPIENT_STORAGE_KEY = "wishwave:recipientMessage";
+const FRAME_STORAGE_KEY = "wishwave:frameStyle";
 
 const Index = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(() => uploadCache.get().file);
