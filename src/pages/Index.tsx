@@ -178,7 +178,7 @@ const Index = () => {
       });
       return;
     }
-    generate(selectedImage, recipientMessage, motionStyle);
+    generate(selectedImage, recipientMessage, motionStyle, frameStyle);
   };
 
   const handleCreateAnother = () => {
@@ -187,10 +187,12 @@ const Index = () => {
     setSavedTransform(null);
     setRecipientMessage("");
     setMotionStyle("wave");
+    setFrameStyle("none");
     setConsent(false);
     uploadCache.clear();
     sessionStorage.removeItem(MOTION_STORAGE_KEY);
     sessionStorage.removeItem(RECIPIENT_STORAGE_KEY);
+    sessionStorage.removeItem(FRAME_STORAGE_KEY);
     reset();
   };
 
