@@ -405,7 +405,7 @@ const Index = () => {
                 size="lg"
                 className="w-full text-lg h-14 gap-2 rounded-xl"
                 onClick={handleGenerate}
-                disabled={status !== "idle" || (!!user && !selectedImage) || noCredits || (!!selectedImage && !consent)}
+                disabled={status !== "idle" || (!!user && !selectedImage) || noCredits || (!!selectedImage && !consent) || (motionStyle === "custom" && (!customPrompt.trim() || !!customPromptError))}
               >
                 <Wand2 className="h-5 w-5" />
                 Animate Photo
