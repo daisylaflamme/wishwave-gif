@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Zap, Plus, ExternalLink } from "lucide-react";
+import { Zap, Plus, ExternalLink, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +12,7 @@ import {
 import { useCredits } from "@/hooks/useCredits";
 import { useAuth } from "@/hooks/useAuth";
 import { isNativeApp, openExternal } from "@/lib/platform";
+import { PromoCodeModal } from "@/components/PromoCodeModal";
 
 interface CreditsBadgeProps {
   onBuyClick: () => void;
@@ -24,6 +25,7 @@ export function CreditsBadge({ onBuyClick }: CreditsBadgeProps) {
   const { user } = useAuth();
   const native = isNativeApp();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [promoOpen, setPromoOpen] = useState(false);
 
   const label = loading ? "…" : `${credits} ${credits === 1 ? "credit" : "credits"} left`;
 
@@ -43,6 +45,16 @@ export function CreditsBadge({ onBuyClick }: CreditsBadgeProps) {
           <Zap className="h-3.5 w-3.5 text-primary" />
           {label}
         </div>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setPromoOpen(true)}
+          className="gap-1 min-h-[44px] sm:min-h-0"
+          aria-label="Redeem promo code"
+        >
+          <Gift className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Redeem</span>
+        </Button>
         {native ? (
           <Button
             size="sm"
@@ -65,6 +77,8 @@ export function CreditsBadge({ onBuyClick }: CreditsBadgeProps) {
           </Button>
         )}
       </div>
+
+      <PromoCodeModal open={promoOpen} onOpenChange={setPromoOpen} />
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-sm">
