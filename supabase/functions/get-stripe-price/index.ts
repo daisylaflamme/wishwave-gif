@@ -10,14 +10,15 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { priceId, environment } = await req.json();
+    const { priceId } = await req.json();
     if (!priceId || typeof priceId !== "string" || !/^[a-zA-Z0-9_-]+$/.test(priceId)) {
       return new Response(JSON.stringify({ error: "Invalid priceId" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const env = (environment || "sandbox") as StripeEnv;
+    const activeEnv = (Deno.env.get("STRIPE_ACTIVE_ENV") || "sandbox").toLowerCase();
+    const env = (activeEnv === "live" ? "live" : "sandbox") as StripeEnv;
     const stripe = createStripeClient(env);
     const prices = await stripe.prices.list({ lookup_keys: [priceId] });
     if (!prices.data.length) {
