@@ -88,9 +88,7 @@ serve(async (req) => {
       line_items: [{ price: stripePrice.id, quantity: 1 }],
       mode: "payment",
       ui_mode: "embedded",
-      return_url:
-        returnUrl ||
-        `${req.headers.get("origin")}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      return_url: safeReturnUrl,
       ...(userEmail && { customer_email: userEmail }),
       metadata: { userId, priceId },
       payment_intent_data: { metadata: { userId, priceId } },
