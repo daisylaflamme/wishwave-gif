@@ -312,6 +312,13 @@ const Index = () => {
                 value={motionStyle}
                 onChange={(v) => setMotionStyle(v as MotionStyle)}
               />
+
+              <StyleSelector
+                label="Choose a frame vibe (optional)"
+                options={FRAME_STYLES}
+                value={frameStyle}
+                onChange={(v) => setFrameStyle(v as FrameStyle)}
+              />
             </div>
 
             {/* Consent */}
