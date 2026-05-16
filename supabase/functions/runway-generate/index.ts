@@ -56,14 +56,17 @@ const MOTION_CONFIG: Record<string, MotionConfig> = {
     multi: ALL_PEOPLE,
     mouthClosed: true,
   },
-
-  laugh: {
-    action:
-      "ACTION: Natural happy laugh expression. Smile widens, shoulders move slightly, head moves subtly. No speaking or forming words.",
-    multi: ALL_PEOPLE,
-    mouthClosed: false,
-  },
 };
+
+const CUSTOM_MOTION_MAX = 100;
+const CUSTOM_BLOCKED_WORDS = [
+  "zoom", "cinematic", "anime", "cartoon", "background",
+  "new person", "extra people", "weapon", "explode", "naked", "remove clothes",
+];
+
+function buildCustomAction(userPrompt: string): string {
+  return `Subtle realistic motion only: ${userPrompt}. Preserve identity, framing, clothing, background, and facial consistency. No new people, objects, text, camera movement, or scene changes.`;
+}
 
 const FRAME_FRAGMENTS: Record<string, string> = {
   celebrate: "festive birthday-style confetti and sparkle",
