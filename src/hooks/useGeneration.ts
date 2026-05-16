@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { MotionStyle } from "@/lib/constants";
+import type { MotionStyle, FrameStyle } from "@/lib/constants";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { addSessionGenerationId } from "@/lib/sessionGenerations";
