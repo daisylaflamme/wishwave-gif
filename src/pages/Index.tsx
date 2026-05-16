@@ -333,6 +333,41 @@ const Index = () => {
                 onChange={(v) => setMotionStyle(v as MotionStyle)}
               />
 
+              {motionStyle === "custom" && (
+                <div className="space-y-1.5">
+                  <label htmlFor="custom-motion" className="text-sm font-medium text-foreground flex items-center justify-between gap-2">
+                    <span>Custom motion</span>
+                    <span
+                      className={`text-[11px] tabular-nums ${
+                        customPrompt.length >= CUSTOM_MOTION_MAX
+                          ? "text-destructive"
+                          : customPrompt.length > CUSTOM_MOTION_MAX * 0.8
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-muted-foreground"
+                      }`}
+                    >
+                      {customPrompt.length}/{CUSTOM_MOTION_MAX}
+                    </span>
+                  </label>
+                  <Textarea
+                    id="custom-motion"
+                    placeholder="Example: gentle smile and wave at camera"
+                    value={customPrompt}
+                    onChange={(e) => setCustomPrompt(e.target.value.slice(0, CUSTOM_MOTION_MAX))}
+                    maxLength={CUSTOM_MOTION_MAX}
+                    rows={2}
+                    aria-describedby="custom-motion-help"
+                  />
+                  {customPromptError ? (
+                    <p className="text-[11px] text-destructive">{customPromptError}</p>
+                  ) : (
+                    <p id="custom-motion-help" className="text-[11px] text-muted-foreground">
+                      Describe subtle realistic motion only.
+                    </p>
+                  )}
+                </div>
+              )}
+
               <StyleSelector
                 label="Choose a frame vibe (optional)"
                 options={FRAME_STYLES}
