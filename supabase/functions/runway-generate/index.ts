@@ -161,7 +161,7 @@ serve(async (req) => {
       });
     }
 
-    const { imageUrl, motionStyle } = await req.json();
+    const { imageUrl, motionStyle, frameStyle } = await req.json();
 
     if (!imageUrl || typeof imageUrl !== "string") {
       return new Response(JSON.stringify({ error: "imageUrl is required" }), {
