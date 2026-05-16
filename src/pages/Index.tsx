@@ -20,8 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
-import { MOTION_STYLES } from "@/lib/constants";
-import type { MotionStyle } from "@/lib/constants";
+import { MOTION_STYLES, FRAME_STYLES } from "@/lib/constants";
+import type { MotionStyle, FrameStyle } from "@/lib/constants";
 import { useGeneration } from "@/hooks/useGeneration";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
@@ -35,6 +35,7 @@ const WEB_APP_URL = "https://gifspark.lovable.app";
 
 const MOTION_STORAGE_KEY = "wishwave:motionStyle";
 const RECIPIENT_STORAGE_KEY = "wishwave:recipientMessage";
+const FRAME_STORAGE_KEY = "wishwave:frameStyle";
 
 const Index = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(() => uploadCache.get().file);
@@ -50,6 +51,11 @@ const Index = () => {
     const stored = sessionStorage.getItem(MOTION_STORAGE_KEY) as MotionStyle | null;
     return stored && MOTION_STYLES.some((m) => m.id === stored) ? stored : "wave";
   });
+  const [frameStyle, setFrameStyle] = useState<FrameStyle>(() => {
+    if (typeof window === "undefined") return "none";
+    const stored = sessionStorage.getItem(FRAME_STORAGE_KEY) as FrameStyle | null;
+    return stored && FRAME_STYLES.some((f) => f.id === stored) ? stored : "none";
+  });
   const [signInOpen, setSignInOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [consent, setConsent] = useState(false);
@@ -61,6 +67,9 @@ const Index = () => {
   useEffect(() => {
     sessionStorage.setItem(RECIPIENT_STORAGE_KEY, recipientMessage);
   }, [recipientMessage]);
+  useEffect(() => {
+    sessionStorage.setItem(FRAME_STORAGE_KEY, frameStyle);
+  }, [frameStyle]);
   const { status, error, result, generate, reset, setResult } = useGeneration();
   const { user } = useAuth();
   const { credits, loading: creditsLoading } = useCredits();
@@ -169,7 +178,7 @@ const Index = () => {
       });
       return;
     }
-    generate(selectedImage, recipientMessage, motionStyle);
+    generate(selectedImage, recipientMessage, motionStyle, frameStyle);
   };
 
   const handleCreateAnother = () => {
@@ -178,10 +187,12 @@ const Index = () => {
     setSavedTransform(null);
     setRecipientMessage("");
     setMotionStyle("wave");
+    setFrameStyle("none");
     setConsent(false);
     uploadCache.clear();
     sessionStorage.removeItem(MOTION_STORAGE_KEY);
     sessionStorage.removeItem(RECIPIENT_STORAGE_KEY);
+    sessionStorage.removeItem(FRAME_STORAGE_KEY);
     reset();
   };
 
@@ -300,6 +311,13 @@ const Index = () => {
                 options={MOTION_STYLES}
                 value={motionStyle}
                 onChange={(v) => setMotionStyle(v as MotionStyle)}
+              />
+
+              <StyleSelector
+                label="Choose a frame vibe (optional)"
+                options={FRAME_STYLES}
+                value={frameStyle}
+                onChange={(v) => setFrameStyle(v as FrameStyle)}
               />
             </div>
 

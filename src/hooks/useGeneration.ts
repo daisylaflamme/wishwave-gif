@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { MotionStyle } from "@/lib/constants";
+import type { MotionStyle, FrameStyle } from "@/lib/constants";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { addSessionGenerationId } from "@/lib/sessionGenerations";
@@ -23,7 +23,7 @@ export function useGeneration() {
   const queryClient = useQueryClient();
 
   const generate = useCallback(
-    async (file: File, recipientMessage: string, motionStyle: MotionStyle) => {
+    async (file: File, recipientMessage: string, motionStyle: MotionStyle, frameStyle: FrameStyle = "none") => {
       setState({ status: "uploading", error: null, result: null });
 
       try {
@@ -71,7 +71,7 @@ export function useGeneration() {
         setState((s) => ({ ...s, status: "generating_video" }));
 
         const videoResponse = await supabase.functions.invoke("runway-generate", {
-          body: { imageUrl, motionStyle, generationId: generation.id },
+          body: { imageUrl, motionStyle, frameStyle, generationId: generation.id },
         });
 
         if (videoResponse.error) throw new Error(`Video generation failed: ${videoResponse.error.message}`);
