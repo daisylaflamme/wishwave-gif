@@ -51,6 +51,11 @@ const Index = () => {
     const stored = sessionStorage.getItem(MOTION_STORAGE_KEY) as MotionStyle | null;
     return stored && MOTION_STYLES.some((m) => m.id === stored) ? stored : "wave";
   });
+  const [frameStyle, setFrameStyle] = useState<FrameStyle>(() => {
+    if (typeof window === "undefined") return "none";
+    const stored = sessionStorage.getItem(FRAME_STORAGE_KEY) as FrameStyle | null;
+    return stored && FRAME_STYLES.some((f) => f.id === stored) ? stored : "none";
+  });
   const [signInOpen, setSignInOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [consent, setConsent] = useState(false);
