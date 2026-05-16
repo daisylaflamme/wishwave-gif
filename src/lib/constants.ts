@@ -39,6 +39,27 @@ export const MOTION_STYLES = [
 
 export type MotionStyle = typeof MOTION_STYLES[number]['id'];
 
+export const FRAME_STYLES = [
+  { id: 'none' as const, label: 'None', icon: '⬜', description: 'No frame' },
+  { id: 'celebrate' as const, label: 'Celebrate', icon: '🎊', description: 'Confetti & sparkle' },
+  { id: 'elegant' as const, label: 'Elegant', icon: '✨', description: 'Soft gold luxury' },
+  { id: 'soft' as const, label: 'Soft Aesthetic', icon: '🌸', description: 'Pastel glow' },
+  { id: 'love' as const, label: 'Love', icon: '💖', description: 'Romantic hearts' },
+  { id: 'retro' as const, label: 'Retro Fun', icon: '📷', description: 'Polaroid vibes' },
+  { id: 'cozy' as const, label: 'Cozy Rustic', icon: '🍂', description: 'Warm rustic paper' },
+] as const;
+
+export type FrameStyle = typeof FRAME_STYLES[number]['id'];
+
+export const FRAME_PROMPT_FRAGMENTS: Record<Exclude<FrameStyle, 'none'>, string> = {
+  celebrate: 'festive birthday-style confetti and sparkle',
+  elegant: 'minimal gold and soft luxury',
+  soft: 'pastel glow and delicate light',
+  love: 'soft romantic hearts and warm glow',
+  retro: 'playful retro film or polaroid-inspired',
+  cozy: 'warm rustic paper, wood, or autumn-inspired',
+};
+
 const PROMPT_BASE =
   'Animate ONLY the person(s) present in the uploaded image. Keep facial identity, features, skin tone, hair, and clothing exactly as in the original — no morphing, no distortion, no face swap. Camera must remain perfectly stable: no zoom, no pan, no crop, no reframing. Preserve original composition, proportions, and background unchanged. DO NOT add new people, faces, objects, or background elements. DO NOT extend the image beyond its original boundaries. Motion must be subtle, realistic, and physically believable, contained within the original frame. Produce a smooth 5-second clip that loops seamlessly (start and end states should match closely). If MULTIPLE people are present, EVERY person must perform the action independently and simultaneously — none stay still — without merging or syncing unnaturally.';
 
