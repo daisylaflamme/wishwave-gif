@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.support-chat]
 verify_jwt = false
+
+[functions.redeem-promo-code]
+verify_jwt = false

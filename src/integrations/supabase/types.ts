@@ -59,6 +59,71 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_code_redemptions: {
+        Row: {
+          credits_added: number
+          id: string
+          promo_code_id: string
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          credits_added: number
+          id?: string
+          promo_code_id: string
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          credits_added?: number
+          id?: string
+          promo_code_id?: string
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_redemptions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          credits_amount: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_redemptions: number | null
+          redeemed_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          credits_amount: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_redemptions?: number | null
+          redeemed_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          credits_amount?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_redemptions?: number | null
+          redeemed_count?: number
+        }
+        Relationships: []
+      }
       purchases: {
         Row: {
           amount_cents: number
@@ -155,6 +220,10 @@ export type Database = {
         Returns: boolean
       }
       consume_credit: { Args: { _user_id: string }; Returns: boolean }
+      redeem_promo_code: {
+        Args: { _code: string; _user_id: string }
+        Returns: Json
+      }
       refund_credit: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
