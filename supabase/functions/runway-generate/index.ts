@@ -89,11 +89,12 @@ function buildFrameSentence(frameStyle?: string): string | null {
  * Priority (most → least important): ACTION, mouth-closed rule, multi-people rule, base scene rules, optional frame overlay.
  * Drops lowest-priority sentences first; never cuts mid-sentence.
  */
-function buildPrompt(motion: string, frameStyle?: string): string {
+function buildPrompt(motion: string, frameStyle?: string, customAction?: string): string {
   const cfg = MOTION_CONFIG[motion] ?? MOTION_CONFIG.wave;
-  const parts: string[] = [cfg.action];
-  if (cfg.mouthClosed) parts.push(MOUTH_CLOSED);
-  parts.push(cfg.multi);
+  const action = customAction ?? cfg.action;
+  const parts: string[] = [action];
+  if (motion !== "custom" && cfg.mouthClosed) parts.push(MOUTH_CLOSED);
+  parts.push(ALL_PEOPLE);
   parts.push(PROMPT_BASE);
   const frame = buildFrameSentence(frameStyle);
   if (frame) parts.push(frame);
@@ -102,8 +103,6 @@ function buildPrompt(motion: string, frameStyle?: string): string {
     const candidate = parts.slice(0, count).join(" ").trim();
     if (candidate.length <= RUNWAY_PROMPT_MAX) return candidate;
   }
-  // Fallback: hard-truncate the action at the last sentence boundary under the limit.
-  const action = parts[0];
   const sliced = action.slice(0, RUNWAY_PROMPT_MAX);
   const lastStop = Math.max(sliced.lastIndexOf("."), sliced.lastIndexOf("!"), sliced.lastIndexOf("?"));
   return (lastStop > 0 ? sliced.slice(0, lastStop + 1) : sliced).trim();
