@@ -8,8 +8,8 @@ export function Footer() {
   };
 
   return (
-    <footer className="border-t border-border/50 mt-8 pt-6 pb-10 px-4 pb-safe">
-      <div className="container max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+    <footer className="border-t border-border/50 mt-8 px-4 py-8 pb-safe">
+      <div className="container max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-3 text-xs text-muted-foreground min-h-[3rem]">
         <span>© {new Date().getFullYear()} GifSpark</span>
         <span aria-hidden>·</span>
         <a
