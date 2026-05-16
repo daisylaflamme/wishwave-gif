@@ -31,6 +31,12 @@ export function Footer() {
         <Link to="/legal#report" className="hover:text-foreground hover:underline">
           Report abuse
         </Link>
+        <a
+          href="mailto:administrator@daisylaflamme.com?subject=GifSpark%20feedback"
+          className="hover:text-foreground hover:underline"
+        >
+          Send feedback
+        </a>
       </div>
     </footer>
   );
