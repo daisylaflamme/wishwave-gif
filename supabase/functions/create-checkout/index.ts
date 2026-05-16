@@ -44,6 +44,32 @@ serve(async (req) => {
       });
     }
 
+    // Server-side allowlist for return URLs to prevent open-redirect abuse.
+    // Never trust client-supplied returnUrl or the Origin header.
+    const ALLOWED_RETURN_ORIGINS = new Set<string>([
+      "https://gifspark.lovable.app",
+      "https://id-preview--5f66f100-340b-4e24-8685-8eadea090d4c.lovable.app",
+      "http://localhost:5173",
+      "http://localhost:8080",
+      "http://localhost:3000",
+    ]);
+    const RETURN_PATH = "/payment-success?session_id={CHECKOUT_SESSION_ID}";
+
+    let safeReturnUrl = `https://gifspark.lovable.app${RETURN_PATH}`;
+    if (typeof returnUrl === "string" && returnUrl.length > 0) {
+      try {
+        const parsed = new URL(returnUrl);
+        if (
+          ALLOWED_RETURN_ORIGINS.has(parsed.origin) &&
+          parsed.pathname === "/payment-success"
+        ) {
+          safeReturnUrl = `${parsed.origin}${RETURN_PATH}`;
+        }
+      } catch {
+        // ignore; fall back to default
+      }
+    }
+
     // Environment is determined server-side only. Never trust the client.
     const activeEnv = (Deno.env.get("STRIPE_ACTIVE_ENV") || "sandbox").toLowerCase();
     const env = (activeEnv === "live" ? "live" : "sandbox") as StripeEnv;
