@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { cn } from "@/lib/utils";
+import { PromoCodeRedeem } from "@/components/PromoCodeRedeem";
 
 interface PricingModalProps {
   open: boolean;
@@ -214,6 +215,7 @@ export function PricingModal({ open, onOpenChange }: PricingModalProps) {
                 )}
               </Button>
             </div>
+            {user && <PromoCodeRedeem />}
             <p className="text-[11px] text-center text-muted-foreground">
               Secure checkout · Powered by Stripe
             </p>
