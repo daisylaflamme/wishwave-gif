@@ -30,12 +30,34 @@ export const MOTION_STYLES = [
     description: 'Cheerful celebration',
   },
   {
-    id: 'laugh' as const,
-    label: 'Laugh',
-    icon: '😄',
-    description: 'A genuine happy laugh',
+    id: 'custom' as const,
+    label: 'Custom Motion',
+    icon: '✍️',
+    description: 'Describe your own subtle motion',
   },
 ] as const;
+
+export const CUSTOM_MOTION_MAX = 100;
+
+export const CUSTOM_MOTION_BLOCKED_WORDS = [
+  'zoom', 'cinematic', 'anime', 'cartoon', 'background',
+  'new person', 'extra people', 'weapon', 'explode', 'naked', 'remove clothes',
+];
+
+export function validateCustomMotion(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return 'Please describe the motion you want.';
+  if (trimmed.length > CUSTOM_MOTION_MAX) return `Please keep it under ${CUSTOM_MOTION_MAX} characters.`;
+  const lowered = trimmed.toLowerCase();
+  if (CUSTOM_MOTION_BLOCKED_WORDS.some((w) => lowered.includes(w))) {
+    return 'Please describe only subtle motion for the existing photo.';
+  }
+  return null;
+}
+
+export function buildCustomMotionPrompt(userPrompt: string): string {
+  return `Subtle realistic motion only: ${userPrompt.trim()}. Preserve identity, framing, clothing, background, and facial consistency. No new people, objects, text, camera movement, or scene changes.`;
+}
 
 export type MotionStyle = typeof MOTION_STYLES[number]['id'];
 
