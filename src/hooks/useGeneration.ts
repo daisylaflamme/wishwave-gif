@@ -71,7 +71,7 @@ export function useGeneration() {
         setState((s) => ({ ...s, status: "generating_video" }));
 
         const videoResponse = await supabase.functions.invoke("runway-generate", {
-          body: { imageUrl, motionStyle, frameStyle, generationId: generation.id },
+          body: { imageUrl, motionStyle, frameStyle, customPrompt, generationId: generation.id },
         });
 
         if (videoResponse.error) throw new Error(`Video generation failed: ${videoResponse.error.message}`);
