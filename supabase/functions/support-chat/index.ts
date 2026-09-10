@@ -95,12 +95,63 @@ function buildSystemPrompt(ctx?: Body["context"]): string {
   return lines.join("\n");
 }
 
+// --- Simple in-memory rate limiter (per client IP / per user token) ---
+const WINDOW_MS = 60_000;
+const MAX_REQUESTS_PER_WINDOW = 8;
+const MAX_REQUESTS_PER_HOUR = 60;
+const hits = new Map<string, number[]>();
+
+function rateLimit(key: string): { ok: boolean; retryAfter: number } {
+  const now = Date.now();
+  const prev = (hits.get(key) ?? []).filter((t) => now - t < 3_600_000);
+  const inWindow = prev.filter((t) => now - t < WINDOW_MS);
+
+  if (inWindow.length >= MAX_REQUESTS_PER_WINDOW) {
+    return { ok: false, retryAfter: Math.ceil((WINDOW_MS - (now - inWindow[0])) / 1000) };
+  }
+  if (prev.length >= MAX_REQUESTS_PER_HOUR) {
+    return { ok: false, retryAfter: 600 };
+  }
+
+  prev.push(now);
+  hits.set(key, prev);
+
+  // Opportunistic cleanup so the map can't grow unbounded.
+  if (hits.size > 5000) {
+    for (const [k, v] of hits) {
+      if (v.every((t) => now - t > 3_600_000)) hits.delete(k);
+    }
+  }
+  return { ok: true, retryAfter: 0 };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      req.headers.get("cf-connecting-ip") ||
+      "unknown";
+    const auth = req.headers.get("Authorization") ?? "";
+    const limitKey = auth ? `t:${auth.slice(-24)}` : `ip:${ip}`;
+    const limit = rateLimit(limitKey);
+    if (!limit.ok) {
+      return new Response(
+        JSON.stringify({ error: "You're sending messages too quickly. Please wait a moment and try again." }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Retry-After": String(limit.retryAfter),
+          },
+        },
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(

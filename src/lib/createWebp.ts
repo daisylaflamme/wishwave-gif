@@ -10,6 +10,8 @@
  * canvas freeze on mobile, and no gif.js worker setup overhead.
  */
 
+import { supabase } from "@/integrations/supabase/client";
+
 const WEBP_FPS = 12;
 const WEBP_DURATION_SECONDS = 5;
 const FRAME_DELAY_MS = Math.round(1000 / WEBP_FPS);
@@ -25,12 +27,16 @@ async function fetchVideoBlob(videoUrl: string): Promise<string> {
 
   let response: Response;
   if (isLegacyRunwayUrl) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error("Please sign in again to download this older creation.");
+    }
     response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/video-proxy`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        Authorization: `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({ url: videoUrl }),
     });
@@ -260,8 +266,8 @@ async function loadWebpEncoder(): Promise<WebpEncodeFn> {
     } = await import("@jsquash/webp/encode.js");
     // Use the non-SIMD build — it loads reliably across all browsers and the
     // size/perf delta is negligible for our 60 frame, 512px-wide encode.
-    const wasmUrl: string = (await import("@jsquash/webp/codec/enc/webp_enc.wasm?url")).default;
-    const res = await fetch(wasmUrl);
+    // Served as a static asset from /public so the binary never enters the bundle.
+    const res = await fetch(`${import.meta.env.BASE_URL}wasm/webp_enc.wasm`);
     if (!res.ok) throw new Error(`Failed to load WebP WASM (${res.status})`);
     const wasmBinary = await res.arrayBuffer();
     await encoderMod.init(undefined, { wasmBinary });
