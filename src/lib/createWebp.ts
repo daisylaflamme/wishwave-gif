@@ -25,12 +25,16 @@ async function fetchVideoBlob(videoUrl: string): Promise<string> {
 
   let response: Response;
   if (isLegacyRunwayUrl) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error("Please sign in again to download this older creation.");
+    }
     response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/video-proxy`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        Authorization: `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({ url: videoUrl }),
     });
