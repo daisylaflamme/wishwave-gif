@@ -266,8 +266,8 @@ async function loadWebpEncoder(): Promise<WebpEncodeFn> {
     } = await import("@jsquash/webp/encode.js");
     // Use the non-SIMD build — it loads reliably across all browsers and the
     // size/perf delta is negligible for our 60 frame, 512px-wide encode.
-    const wasmUrl: string = (await import("@jsquash/webp/codec/enc/webp_enc.wasm?url")).default;
-    const res = await fetch(wasmUrl);
+    // Served as a static asset from /public so the binary never enters the bundle.
+    const res = await fetch(`${import.meta.env.BASE_URL}wasm/webp_enc.wasm`);
     if (!res.ok) throw new Error(`Failed to load WebP WASM (${res.status})`);
     const wasmBinary = await res.arrayBuffer();
     await encoderMod.init(undefined, { wasmBinary });
