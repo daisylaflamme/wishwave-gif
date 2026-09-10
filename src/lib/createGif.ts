@@ -1,4 +1,5 @@
 import { encode } from "modern-gif";
+import { supabase } from "@/integrations/supabase/client";
 // Vite worker URL — bundled and served as a static asset, runs encoding off main thread.
 import gifWorkerUrl from "modern-gif/worker?url";
 

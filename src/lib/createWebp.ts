@@ -10,6 +10,8 @@
  * canvas freeze on mobile, and no gif.js worker setup overhead.
  */
 
+import { supabase } from "@/integrations/supabase/client";
+
 const WEBP_FPS = 12;
 const WEBP_DURATION_SECONDS = 5;
 const FRAME_DELAY_MS = Math.round(1000 / WEBP_FPS);
