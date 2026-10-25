@@ -24,6 +24,7 @@ dist-ssr
 *.sw?
 
 # Local environment overrides (never commit real secrets)
+.env
+.env.*
 .env.local
 .env.*.local
-*.env
