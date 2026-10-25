@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { resolveConfig } from "vite";
 import publicCloudConfig from "../../public-cloud-config.json";
